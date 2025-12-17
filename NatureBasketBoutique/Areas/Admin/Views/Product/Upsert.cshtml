@@ -1,0 +1,86 @@
+﻿@model ProductVM
+
+<div class="w-full max-w-4xl mx-auto mt-10">
+    <form method="post" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" enctype="multipart/form-data">
+        <input asp-for="Product.Id" hidden />
+        <input asp-for="Product.ImageUrl" hidden />
+
+        <div class="flex justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-700">@(Model.Product.Id != 0 ? "Update" : "Create") Product</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <div>
+                <div class="mb-4">
+                    <label asp-for="Product.Title" class="block text-gray-700 text-sm font-bold mb-2"></label>
+                    <input asp-for="Product.Title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                    <span asp-validation-for="Product.Title" class="text-red-500 text-xs italic"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Product.ISBN" class="block text-gray-700 text-sm font-bold mb-2"></label>
+                    <input asp-for="Product.ISBN" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                    <span asp-validation-for="Product.ISBN" class="text-red-500 text-xs italic"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Product.Description" class="block text-gray-700 text-sm font-bold mb-2"></label>
+                    <textarea asp-for="Product.Description" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label asp-for="Product.ListPrice" class="block text-gray-700 text-sm font-bold mb-2"></label>
+                        <input asp-for="Product.ListPrice" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                        <span asp-validation-for="Product.ListPrice" class="text-red-500 text-xs italic"></span>
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="Product.Price" class="block text-gray-700 text-sm font-bold mb-2"></label>
+                        <input asp-for="Product.Price" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                        <span asp-validation-for="Product.Price" class="text-red-500 text-xs italic"></span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Product.CategoryId" class="block text-gray-700 text-sm font-bold mb-2"></label>
+                    <select asp-for="Product.CategoryId" asp-items="@Model.CategoryList" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option disabled selected>-- Select Category --</option>
+                    </select>
+                    <span asp-validation-for="Product.CategoryId" class="text-red-500 text-xs italic"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Product.ImageUrl" class="block text-gray-700 text-sm font-bold mb-2">Product Image</label>
+                    <input type="file" name="file" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                </div>
+            </div>
+
+            <div class="flex justify-center items-start">
+                @if (!string.IsNullOrEmpty(Model.Product.ImageUrl))
+                {
+                    <img src="@Model.Product.ImageUrl" class="w-full rounded border p-1 shadow-lg" />
+                }
+                else
+                {
+                    <div class="text-gray-400 border-2 border-dashed p-10 rounded">Image Preview</div>
+                }
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between mt-6">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                @(Model.Product.Id != 0 ? "Update" : "Create")
+            </button>
+            <a asp-controller="Product" asp-action="Index" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
+                Back to List
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        <partial name="_ValidationScriptsPartial" /> 
+    }
+}

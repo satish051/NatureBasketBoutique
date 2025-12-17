@@ -1,0 +1,27 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using NatureBasketBoutique.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="flex items-center space-x-6">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <li>
+            <a class="text-white hover:text-green-200 font-semibold" href="#">Hello, @UserManager.GetUserName(User)</a>
+        </li>
+        <li>
+            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                <button type="submit" class="text-white border border-white px-3 py-1 rounded hover:bg-white hover:text-green-700 transition">Logout</button>
+            </form>
+        </li>
+    }
+    else
+    {
+        <li>
+            <a class="text-white hover:text-green-200 font-semibold" asp-area="Identity" asp-page="/Account/Register">Register</a>
+        </li>
+        <li>
+            <a class="text-white hover:text-green-200 font-semibold" asp-area="Identity" asp-page="/Account/Login">Login</a>
+        </li>
+    }
+</ul>
