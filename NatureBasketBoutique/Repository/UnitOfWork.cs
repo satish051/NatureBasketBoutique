@@ -1,4 +1,5 @@
 ﻿using NatureBasketBoutique.Data;
+using NatureBasketBoutique.Models;
 using NatureBasketBoutique.Repository.IRepository;
 
 namespace NatureBasketBoutique.Repository
@@ -6,16 +7,19 @@ namespace NatureBasketBoutique.Repository
     public class UnitOfWork : IUnitOfWork
     {
         private ApplicationDbContext _db;
+
         public ICategoryRepository Category { get; private set; }
         public IProductRepository Product { get; private set; }
         public IShoppingCartRepository ShoppingCart { get; private set; }
 
-        // Add Properties
+        // keeping these generic is fine for now
         public IRepository<ApplicationUser> ApplicationUser { get; private set; }
-        public IRepository<OrderHeader> OrderHeader { get; private set; }
         public IRepository<OrderDetail> OrderDetail { get; private set; }
 
-        // Update Constructor
+        // --- CHANGE 1: Use the Interface that has the Update method ---
+        public IOrderHeaderRepository OrderHeader { get; private set; }
+        // -------------------------------------------------------------
+
         public UnitOfWork(ApplicationDbContext db)
         {
             _db = db;
@@ -23,10 +27,12 @@ namespace NatureBasketBoutique.Repository
             Product = new ProductRepository(_db);
             ShoppingCart = new ShoppingCartRepository(_db);
 
-            // Generic Repos are fine for these
             ApplicationUser = new Repository<ApplicationUser>(_db);
-            OrderHeader = new Repository<OrderHeader>(_db);
             OrderDetail = new Repository<OrderDetail>(_db);
+
+            // --- CHANGE 2: Use the Class you just showed me ---
+            OrderHeader = new OrderHeaderRepository(_db);
+            // --------------------------------------------------
         }
 
         public void Save()

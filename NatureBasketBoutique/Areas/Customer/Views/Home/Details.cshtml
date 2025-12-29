@@ -2,55 +2,45 @@
 
 <form method="post">
     <input hidden asp-for="ProductId" />
-
-    <div class="container mx-auto px-4 py-10">
+    <div class="container mx-auto px-4 py-8">
         <div class="bg-white shadow-xl rounded-lg overflow-hidden">
-            <div class="md:flex">
 
-                <div class="md:w-1/2">
-                    <img class="w-full h-full object-cover" src="@Model.Product.ImageUrl" alt="@Model.Product.Title">
+            <div class="bg-green-700 text-white p-4 flex justify-between items-center">
+                <h2 class="text-xl font-bold uppercase">@Model.Product.Title</h2>
+                <a asp-action="Index" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded text-sm font-semibold transition">
+                    Back to Home
+                </a>
+            </div>
+
+            <div class="flex flex-col md:flex-row p-6">
+                <div class="w-full md:w-1/2 p-4">
+                    <img src="@Model.Product.ImageUrl" class="w-full h-auto rounded-lg shadow-lg object-cover" alt="Product Image" />
                 </div>
 
-                <div class="md:w-1/2 p-8 flex flex-col">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-3xl font-bold text-gray-800">@Model.Product.Title</h2>
-                        <span class="bg-green-100 text-green-800 text-sm font-semibold mr-2 px-2.5 py-0.5 rounded">
-                            @Model.Product.Category.Name
-                        </span>
+                <div class="w-full md:w-1/2 p-4">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">@Model.Product.Title</h3>
+                    <p class="text-sm text-gray-500 mb-4">ISBN: @Model.Product.ISBN</p>
+
+                    <div class="mb-4">
+                        <span class="text-gray-500 line-through mr-2">NPR @Model.Product.ListPrice.ToString("0.00")</span>
+                        <span class="text-2xl font-bold text-green-700">NPR @Model.Product.Price.ToString("0.00")</span>
                     </div>
 
-                    <p class="text-gray-600 text-sm mb-4">ISBN: @Model.Product.ISBN</p>
-
-                    <div class="mb-6">
-                        <p class="text-gray-700 leading-relaxed">@Html.Raw(Model.Product.Description)</p>
+                    <div class="mb-6 text-gray-700">
+                        @Html.Raw(Model.Product.Description)
                     </div>
 
-                    <div class="flex items-baseline mb-6 border-b pb-6">
-                        <span class="text-3xl font-bold text-green-700 mr-4">
-                            @Model.Product.Price.ToString("c")
-                        </span>
-                        <span class="text-lg text-gray-400 line-through">
-                            @Model.Product.ListPrice.ToString("c")
-                        </span>
-                    </div>
-
-                    <div class="mt-auto">
+                    <div class="bg-gray-100 p-4 rounded-lg mb-6">
                         <div class="flex items-center mb-4">
                             <label class="font-bold text-gray-700 mr-4">Count:</label>
-                            <input asp-for="Count" type="number" value="1" min="1"
-                                   class="shadow appearance-none border rounded w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                            <input asp-for="Count" type="number" value="1" min="1" class="shadow appearance-none border rounded w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                         </div>
+                    </div>
 
-                        <div class="flex space-x-4">
-                            <button type="submit"
-                                    class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded shadow transition duration-200">
-                                Add to Cart
-                            </button>
-                            <a asp-action="Index"
-                               class="flex-1 bg-gray-600 hover:bg-gray-700 text-center text-white font-bold py-3 px-6 rounded shadow transition duration-200">
-                                Back to Home
-                            </a>
-                        </div>
+                    <div class="flex gap-4">
+                        <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded shadow focus:outline-none focus:shadow-outline transition duration-300 uppercase">
+                            Add to Cart
+                        </button>
                     </div>
                 </div>
             </div>

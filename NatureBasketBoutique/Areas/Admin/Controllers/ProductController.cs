@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using NatureBasketBoutique.Models;
 using NatureBasketBoutique.Repository.IRepository;
 using NatureBasketBoutique.ViewModels;
+using Microsoft.AspNetCore.Hosting; // Required for IWebHostEnvironment
 
 namespace NatureBasketBoutique.Areas.Admin.Controllers
 {
@@ -10,7 +11,7 @@ namespace NatureBasketBoutique.Areas.Admin.Controllers
     public class ProductController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IWebHostEnvironment _webHostEnvironment; // For accessing wwwroot
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public ProductController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
         {
@@ -20,7 +21,6 @@ namespace NatureBasketBoutique.Areas.Admin.Controllers
 
         public IActionResult Index()
         {
-            // GetAll now needs to include "Category" so we can display the Category Name in the grid
             List<Product> objProductList = _unitOfWork.Product.GetAll(includeProperties: "Category").ToList();
             return View(objProductList);
         }
@@ -51,12 +51,19 @@ namespace NatureBasketBoutique.Areas.Admin.Controllers
             }
         }
 
+        // POST: Upsert (Update + Insert)
         [HttpPost]
         public IActionResult Upsert(ProductVM productVM, IFormFile? file)
         {
+            // --- FIX START: Prevent crash if no image is uploaded for a new product ---
+            if (file == null && productVM.Product.Id == 0)
+            {
+                ModelState.AddModelError("file", "Please upload an image for new products.");
+            }
+            // --- FIX END ---
+
             if (ModelState.IsValid)
             {
-                // 1. Handle File Upload
                 string wwwRootPath = _webHostEnvironment.WebRootPath;
                 if (file != null)
                 {
@@ -85,7 +92,7 @@ namespace NatureBasketBoutique.Areas.Admin.Controllers
                     productVM.Product.ImageUrl = @"\images\products\" + fileName;
                 }
 
-                // 2. Save Data
+                // Save Data
                 if (productVM.Product.Id == 0)
                 {
                     _unitOfWork.Product.Add(productVM.Product);
@@ -109,6 +116,7 @@ namespace NatureBasketBoutique.Areas.Admin.Controllers
             });
             return View(productVM);
         }
+
         // GET: Show Delete Confirmation Page
         public IActionResult Delete(int? id)
         {
@@ -154,17 +162,15 @@ namespace NatureBasketBoutique.Areas.Admin.Controllers
             TempData["Success"] = "Product deleted successfully";
             return RedirectToAction("Index");
         }
-        // Use API Call for Delete (Better for JavaScript DataTables later)
-        #region API CALLS
 
+        // API Call (Kept for future use)
+        #region API CALLS
         [HttpGet]
         public IActionResult GetAll()
         {
             List<Product> objProductList = _unitOfWork.Product.GetAll(includeProperties: "Category").ToList();
             return Json(new { data = objProductList });
         }
-
-
         #endregion
     }
 }

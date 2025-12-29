@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services; // Ensure this is here
 using Microsoft.EntityFrameworkCore;
 using NatureBasketBoutique.Data;
 using NatureBasketBoutique.Models;
 using NatureBasketBoutique.Repository;
 using NatureBasketBoutique.Repository.IRepository;
+using NatureBasketBoutique.Utility;             // Ensure this is here
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,27 +17,29 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // 2. Add Identity (Users & Roles)
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = false; // Easier for development
-    options.Password.RequireDigit = false;          // Loosened for dev; tighten for prod
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequireDigit = false;
     options.Password.RequireLowercase = false;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
     options.Password.RequiredLength = 6;
-    options.Password.RequiredLength = 6;
 })
-
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// Add this line below AddDbContext and AddIdentity
+// 3. Register Services (Order Matters!)
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IEmailSender, EmailSender>(); // <-- Added correctly here
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
+// 4. Build the App (Locks the container)
 var app = builder.Build();
 
-// 3. Configure the HTTP request pipeline.
+// --- NO SERVICE REGISTRATION BELOW THIS LINE ---
+
+// 5. Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -47,7 +51,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// 4. Enable Authentication & Authorization
+// 6. Enable Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -55,11 +59,13 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{area=Customer}/{controller=Home}/{action=Index}/{id?}");
 
-// 5. Seed Database Roles
+app.MapRazorPages();
+
+// 7. Seed Database Roles
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     await DbInitializer.SeedRolesAndAdminAsync(services);
 }
-app.MapRazorPages();
+
 app.Run();

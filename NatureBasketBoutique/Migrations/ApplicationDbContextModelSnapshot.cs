@@ -17,7 +17,7 @@ namespace NatureBasketBoutique.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.11")
+                .HasAnnotation("ProductVersion", "8.0.22")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -255,7 +255,7 @@ namespace NatureBasketBoutique.Migrations
                     b.Property<int>("Count")
                         .HasColumnType("int");
 
-                    b.Property<int>("OrderId")
+                    b.Property<int>("OrderHeaderId")
                         .HasColumnType("int");
 
                     b.Property<double>("Price")
@@ -266,7 +266,7 @@ namespace NatureBasketBoutique.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderId");
+                    b.HasIndex("OrderHeaderId");
 
                     b.HasIndex("ProductId");
 
@@ -282,7 +282,6 @@ namespace NatureBasketBoutique.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ApplicationUserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Carrier")
@@ -349,7 +348,6 @@ namespace NatureBasketBoutique.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ISBN")
@@ -357,7 +355,6 @@ namespace NatureBasketBoutique.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ImageUrl")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("ListPrice")
@@ -386,7 +383,6 @@ namespace NatureBasketBoutique.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ApplicationUserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Count")
@@ -459,7 +455,7 @@ namespace NatureBasketBoutique.Migrations
                 {
                     b.HasOne("NatureBasketBoutique.Models.OrderHeader", "OrderHeader")
                         .WithMany()
-                        .HasForeignKey("OrderId")
+                        .HasForeignKey("OrderHeaderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -478,9 +474,7 @@ namespace NatureBasketBoutique.Migrations
                 {
                     b.HasOne("NatureBasketBoutique.Models.ApplicationUser", "ApplicationUser")
                         .WithMany()
-                        .HasForeignKey("ApplicationUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ApplicationUserId");
 
                     b.Navigation("ApplicationUser");
                 });
@@ -500,9 +494,7 @@ namespace NatureBasketBoutique.Migrations
                 {
                     b.HasOne("NatureBasketBoutique.Models.ApplicationUser", "ApplicationUser")
                         .WithMany()
-                        .HasForeignKey("ApplicationUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ApplicationUserId");
 
                     b.HasOne("NatureBasketBoutique.Models.Product", "Product")
                         .WithMany()

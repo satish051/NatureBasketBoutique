@@ -1,32 +1,35 @@
 ﻿@model IEnumerable<Product>
 
 <div class="container mx-auto px-4 py-8">
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
         @foreach (var product in Model)
         {
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col hover:shadow-xl transition-shadow duration-300">
-
-                <div class="relative h-64 overflow-hidden">
-                    <img src="@product.ImageUrl" alt="@product.Title" class="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500" />
-                    <div class="absolute top-0 right-0 bg-green-600 text-white text-xs font-bold px-2 py-1 m-2 rounded">
-                        @product.Category.Name
-                    </div>
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col hover:shadow-2xl transition-shadow duration-300">
+                <div class="h-64 overflow-hidden relative group">
+                    <img src="@product.ImageUrl" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500" alt="@product.Title" />
                 </div>
 
-                <div class="p-4 flex-grow flex flex-col justify-between">
+                <div class="p-5 flex-grow flex flex-col justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-1">@product.Title</h3>
-                        <p class="text-sm text-gray-600 mb-2">by <span class="font-medium">Nature Basket</span></p>
-                        <div class="flex items-center mb-2">
-                            <span class="text-gray-400 line-through text-sm mr-2">@product.ListPrice.ToString("c")</span>
-                            <span class="text-xl font-bold text-green-700">@product.Price.ToString("c")</span>
-                        </div>
+                        <h3 class="text-lg font-bold text-gray-800 uppercase truncate">@product.Title</h3>
+                        <p class="text-sm text-gray-500 mb-2">by @product.ISBN</p>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+                            @Html.Raw(product.Description)
+                        </p>
                     </div>
 
-                    <a asp-action="Details" asp-route-productId="@product.Id"
-                       class="mt-4 block w-full text-center bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
-                        View Details
-                    </a>
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-sm text-gray-400 line-through">NPR @product.ListPrice.ToString("0")</span>
+                            <span class="text-xl font-bold text-green-600">NPR @product.Price.ToString("0")</span>
+                        </div>
+
+                        <a href="/Customer/Home/Details?productId=@product.Id"
+                           class="block w-full text-center bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded transition">
+                            Details
+                        </a>
+                    </div>
                 </div>
             </div>
         }

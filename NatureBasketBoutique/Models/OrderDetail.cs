@@ -9,8 +9,8 @@ namespace NatureBasketBoutique.Models
         public int Id { get; set; }
 
         [Required]
-        public int OrderId { get; set; }
-        [ForeignKey("OrderId")]
+        public int OrderHeaderId { get; set; }
+        [ForeignKey("OrderHeaderId")]
         [ValidateNever]
         public OrderHeader OrderHeader { get; set; }
 
@@ -21,6 +21,6 @@ namespace NatureBasketBoutique.Models
         public Product Product { get; set; }
 
         public int Count { get; set; }
-        public double Price { get; set; } // Price at the moment of purchase
+        public double Price { get; set; }
     }
 }

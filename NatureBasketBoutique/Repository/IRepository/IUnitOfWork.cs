@@ -7,7 +7,7 @@
         IShoppingCartRepository ShoppingCart { get; } // Changed from IRepository to IShoppingCartRepository
 
         IRepository<ApplicationUser> ApplicationUser { get; }
-        IRepository<OrderHeader> OrderHeader { get; }
+        IOrderHeaderRepository OrderHeader { get; }
         IRepository<OrderDetail> OrderDetail { get; }
         void Save();
     }

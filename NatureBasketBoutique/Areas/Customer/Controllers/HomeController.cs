@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc;
+using NatureBasketBoutique.Models;
+using NatureBasketBoutique.Repository.IRepository;
+using System.Diagnostics;
 using System.Security.Claims;
 
 namespace NatureBasketBoutique.Areas.Customer.Controllers
@@ -22,6 +25,7 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
             return View(productList);
         }
 
+        // --- 1. GET: Display Product Details ---
         public IActionResult Details(int productId)
         {
             ShoppingCart cart = new()
@@ -33,8 +37,9 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
             return View(cart);
         }
 
+        // --- 2. POST: Add to Cart ---
         [HttpPost]
-        [Authorize]
+        [Authorize] // Requires user to be logged in to add to cart
         public IActionResult Details(ShoppingCart shoppingCart)
         {
             var claimsIdentity = (ClaimsIdentity)User.Identity;
@@ -42,21 +47,25 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
 
             shoppingCart.ApplicationUserId = userId;
 
+            // Check if this item already exists in the cart for this user
             ShoppingCart cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.ApplicationUserId == userId &&
-                                                                         u.ProductId == shoppingCart.ProductId);
+                                                                        u.ProductId == shoppingCart.ProductId);
 
             if (cartFromDb != null)
             {
+                // Item exists: Update count
                 cartFromDb.Count += shoppingCart.Count;
                 _unitOfWork.ShoppingCart.Update(cartFromDb);
             }
             else
             {
+                // Item does not exist: Add new
                 _unitOfWork.ShoppingCart.Add(shoppingCart);
             }
 
             _unitOfWork.Save();
-            TempData["Success"] = "Cart updated successfully";
+
+            TempData["success"] = "Cart updated successfully";
 
             return RedirectToAction(nameof(Index));
         }
@@ -64,6 +73,12 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
         public IActionResult Privacy()
         {
             return View();
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
 }

@@ -107,6 +107,7 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
         }
 
         // POST: Place Order
+        // POST: Place Order
         [HttpPost]
         [ActionName("Summary")]
         public IActionResult SummaryPOST()
@@ -114,14 +115,14 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
             var claimsIdentity = (ClaimsIdentity)User.Identity;
             var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
-            // Re-fetch cart (security: don't trust the browser's total)
+            // Re-fetch cart
             ShoppingCartVM.ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == userId,
                                                                              includeProperties: "Product");
 
             ShoppingCartVM.OrderHeader.OrderDate = DateTime.Now;
             ShoppingCartVM.OrderHeader.ApplicationUserId = userId;
 
-            // Calculate Total Again (Backend Validation)
+            // Calculate Total Again
             ShoppingCartVM.OrderHeader.OrderTotal = 0;
             foreach (var cart in ShoppingCartVM.ShoppingCartList)
             {
@@ -133,17 +134,17 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
             ShoppingCartVM.OrderHeader.OrderStatus = NatureBasketBoutique.Utility.SD.StatusPending;
             ShoppingCartVM.OrderHeader.PaymentStatus = NatureBasketBoutique.Utility.SD.PaymentStatusPending;
 
-            // 1. Save Order Header
+            // 1. SAVE ORDER HEADER FIRST (Crucial: This generates the ID)
             _unitOfWork.OrderHeader.Add(ShoppingCartVM.OrderHeader);
             _unitOfWork.Save();
 
-            // 2. Save Order Details (Line Items)
+            // 2. NOW SAVE ORDER DETAILS (Using the generated OrderHeader.Id)
             foreach (var cart in ShoppingCartVM.ShoppingCartList)
             {
                 OrderDetail orderDetail = new()
                 {
                     ProductId = cart.ProductId,
-                    OrderId = ShoppingCartVM.OrderHeader.Id,
+                    OrderHeaderId = ShoppingCartVM.OrderHeader.Id, // <--- Corrected Name
                     Price = cart.Price,
                     Count = cart.Count
                 };
@@ -158,7 +159,6 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
             // Redirect to Confirmation
             return RedirectToAction(nameof(OrderConfirmation), new { id = ShoppingCartVM.OrderHeader.Id });
         }
-
         public IActionResult OrderConfirmation(int id)
         {
             return View(id);
