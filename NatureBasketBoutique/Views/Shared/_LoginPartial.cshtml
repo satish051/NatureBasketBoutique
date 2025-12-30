@@ -3,25 +3,27 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
-<ul class="flex items-center space-x-6">
+<ul class="flex items-center space-x-4">
     @if (SignInManager.IsSignedIn(User))
     {
         <li>
-            <a class="text-white hover:text-green-200 font-semibold" href="#">Hello, @UserManager.GetUserName(User)</a>
+            <a id="manage" class="text-green-100 hover:text-white font-medium text-sm transition" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
+                Hello @UserManager.GetUserName(User)!
+            </a>
         </li>
         <li>
-            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                <button type="submit" class="text-white border border-white px-3 py-1 rounded hover:bg-white hover:text-green-700 transition">Logout</button>
+            <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                <button id="logout" type="submit" class="bg-green-800 hover:bg-green-900 text-white px-3 py-1 rounded text-sm transition">Logout</button>
             </form>
         </li>
     }
     else
     {
         <li>
-            <a class="text-white hover:text-green-200 font-semibold" asp-area="Identity" asp-page="/Account/Register">Register</a>
+            <a class="text-green-100 hover:text-white font-medium text-sm transition" id="register" asp-area="Identity" asp-page="/Account/Register">Register</a>
         </li>
         <li>
-            <a class="text-white hover:text-green-200 font-semibold" asp-area="Identity" asp-page="/Account/Login">Login</a>
+            <a class="bg-white text-green-700 hover:bg-gray-100 px-3 py-1 rounded text-sm font-bold transition" id="login" asp-area="Identity" asp-page="/Account/Login">Login</a>
         </li>
     }
 </ul>

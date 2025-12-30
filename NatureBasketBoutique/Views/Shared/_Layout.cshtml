@@ -17,50 +17,68 @@
 
     <header>
         <nav class="bg-green-700 text-white shadow-lg">
-            <div class="container mx-auto px-4">
-                <div class="flex justify-between items-center py-4">
+            <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+                <div class="relative flex items-center justify-between h-16">
 
-                    <a class="text-2xl font-bold hover:text-green-200 transition" asp-area="Customer" asp-controller="Home" asp-action="Index">
-                        Nature Basket
-                    </a>
+                    <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
+                        <div class="flex-shrink-0 flex items-center">
+                            <a asp-area="" asp-controller="Home" asp-action="Index" class="font-bold text-2xl tracking-wider hover:text-green-200 transition">
+                                <i class="bi bi-basket3-fill"></i> NatureBasket
+                            </a>
+                        </div>
 
-                    <button class="md:hidden text-white focus:outline-none">
-                        <i class="bi bi-list text-3xl"></i>
-                    </button>
+                        <div class="hidden sm:block sm:ml-6">
+                            <div class="flex space-x-4">
+                                <a asp-area="Customer" asp-controller="Home" asp-action="Index"
+                                   class="bg-green-800 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-600 transition">
+                                    Home
+                                </a>
 
-                    <div class="hidden md:flex space-x-6 items-center">
-                        <a class="hover:text-green-200 font-medium" asp-area="Customer" asp-controller="Home" asp-action="Index">Home</a>
-
-                        @if (User.IsInRole(SD.Role_Admin))
-                        {
-                            <div class="relative group z-50">
-                                <button class="hover:text-green-200 font-medium flex items-center">
-                                    Content Management <i class="bi bi-chevron-down ml-1 text-sm"></i>
-                                </button>
-                                <div class="absolute hidden group-hover:block bg-white text-gray-800 shadow-xl rounded-md mt-0 w-48 border border-gray-200">
-                                    <a class="block px-4 py-2 hover:bg-green-50 hover:text-green-700 transition" asp-area="Admin" asp-controller="Category" asp-action="Index">Categories</a>
-                                    <a class="block px-4 py-2 hover:bg-green-50 hover:text-green-700 transition" asp-area="Admin" asp-controller="Product" asp-action="Index">Products</a>
-                                    <div class="border-t border-gray-100"></div>
-                                    <a class="block px-4 py-2 hover:bg-green-50 hover:text-green-700 transition"
-                                       href="/Admin/Order/Index">
-                                        Order Management
+                                @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
+                                {
+                                    <a asp-area="Admin" asp-controller="Order" asp-action="Index"
+                                       class="text-green-100 hover:bg-green-600 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">
+                                        Manage Orders
                                     </a>
-                                </div>
+
+                                    <div class="relative group">
+                                        <button class="text-green-100 hover:bg-green-600 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition flex items-center">
+                                            Content Management
+                                            <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                        </button>
+                                        <div class="absolute z-10 left-0 mt-0 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block">
+                                            <a asp-area="Admin" asp-controller="Category" asp-action="Index" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Category</a>
+                                            <a asp-area="Admin" asp-controller="Product" asp-action="Index" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Product</a>
+                                            <div class="border-t border-gray-100"></div>
+                                            <a asp-area="Identity" asp-page="/Account/Register" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Create User</a>
+                                        </div>
+                                    </div>
+                                }
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+
+                        @if (!User.IsInRole("Admin"))
+                        {
+                            <a asp-area="Customer" asp-controller="Cart" asp-action="Index" class="group -m-2 p-2 flex items-center mr-4 text-green-100 hover:text-white">
+                                <i class="bi bi-cart3 text-2xl"></i>
+                            </a>
                         }
 
-
-                        <a class="hover:text-green-200 font-medium" href="/Admin/Order/Index">
-                            My Orders
-                        </a>
-                        <a class="relative hover:text-green-200 transition" asp-area="Customer" asp-controller="Cart" asp-action="Index">
-                            <i class="bi bi-cart3 text-xl"></i>
-                        </a>
-                    </div>
-
-                    <div>
                         <partial name="_LoginPartial" />
                     </div>
+                </div>
+            </div>
+
+            <div class="sm:hidden" id="mobile-menu">
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <a asp-area="Customer" asp-controller="Home" asp-action="Index" class="bg-green-900 text-white block px-3 py-2 rounded-md text-base font-medium">Home</a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-area="Admin" asp-controller="Order" asp-action="Index" class="text-gray-300 hover:bg-green-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Orders</a>
+                    }
                 </div>
             </div>
         </nav>
