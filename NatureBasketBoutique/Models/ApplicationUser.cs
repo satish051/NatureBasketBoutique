@@ -1,10 +1,16 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace NatureBasketBoutique.Models
 {
     public class ApplicationUser : IdentityUser
     {
-        // We will add properties like FullName, Address, PostalCode here later.
-        public string? FullName { get; set; }
+        [Required]
+        public string Name { get; set; }
+
+        public string? StreetAddress { get; set; }
+        public string? City { get; set; }
+        public string? State { get; set; }
+        public string? PostalCode { get; set; }
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NatureBasketBoutique.Models;
 using NatureBasketBoutique.Repository.IRepository;
+using NatureBasketBoutique.Utility;
 using System.Diagnostics;
 using System.Security.Claims;
 
@@ -19,9 +20,23 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(string? searchString)
         {
-            IEnumerable<Product> productList = _unitOfWork.Product.GetAll(includeProperties: "Category");
+            IEnumerable<Product> productList;
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                // Filter by Title OR ISBN (Case Insensitive usually handled by DB)
+                productList = _unitOfWork.Product.GetAll(u => u.Title.Contains(searchString) ||
+                                                              u.ISBN.Contains(searchString),
+                                                         includeProperties: "Category");
+            }
+            else
+            {
+                // No search? Return everything
+                productList = _unitOfWork.Product.GetAll(includeProperties: "Category");
+            }
+
             return View(productList);
         }
 
@@ -39,34 +54,51 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
 
         // --- 2. POST: Add to Cart ---
         [HttpPost]
-        [Authorize] // Requires user to be logged in to add to cart
         public IActionResult Details(ShoppingCart shoppingCart)
         {
             var claimsIdentity = (ClaimsIdentity)User.Identity;
-            var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
 
-            shoppingCart.ApplicationUserId = userId;
-
-            // Check if this item already exists in the cart for this user
-            ShoppingCart cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.ApplicationUserId == userId &&
-                                                                        u.ProductId == shoppingCart.ProductId);
-
-            if (cartFromDb != null)
+            if (claim != null)
             {
-                // Item exists: Update count
-                cartFromDb.Count += shoppingCart.Count;
-                _unitOfWork.ShoppingCart.Update(cartFromDb);
+                // ================= LOGGED IN USER (Database Logic) =================
+                shoppingCart.ApplicationUserId = claim.Value;
+
+                ShoppingCart cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.ApplicationUserId == claim.Value &&
+                                                                       u.ProductId == shoppingCart.ProductId);
+                if (cartFromDb != null)
+                {
+                    cartFromDb.Count += shoppingCart.Count;
+                    _unitOfWork.ShoppingCart.Update(cartFromDb);
+                }
+                else
+                {
+                    _unitOfWork.ShoppingCart.Add(shoppingCart);
+                }
+                _unitOfWork.Save();
             }
             else
             {
-                // Item does not exist: Add new
-                _unitOfWork.ShoppingCart.Add(shoppingCart);
+                // ================= GUEST USER (Session Logic) =================
+                List<ShoppingCart> sessionCart = HttpContext.Session.Get<List<ShoppingCart>>("SessionCart") ?? new List<ShoppingCart>();
+
+                // Check if item already exists in session
+                var existingItem = sessionCart.FirstOrDefault(u => u.ProductId == shoppingCart.ProductId);
+                if (existingItem != null)
+                {
+                    existingItem.Count += shoppingCart.Count;
+                }
+                else
+                {
+                    // We only store IDs in session, we will load Product details later
+                    shoppingCart.Id = 0; // Temp ID
+                    sessionCart.Add(shoppingCart);
+                }
+
+                HttpContext.Session.Set("SessionCart", sessionCart);
             }
 
-            _unitOfWork.Save();
-
             TempData["success"] = "Cart updated successfully";
-
             return RedirectToAction(nameof(Index));
         }
 
