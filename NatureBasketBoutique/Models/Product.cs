@@ -33,4 +33,5 @@ namespace NatureBasketBoutique.Models // <--- VERIFY THIS LINE
         [ValidateNever]
         public Category Category { get; set; }
     }
+
 }
