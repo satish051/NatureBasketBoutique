@@ -10,7 +10,6 @@ namespace NatureBasketBoutique.Utility
             // For now, we just return a completed task to satisfy the interface.
             return Task.CompletedTask;
         }
-
     }
 
 }
