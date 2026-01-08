@@ -33,7 +33,8 @@
                     @foreach (var obj in Model)
                     {
                         <tr class="bg-white border-b hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 font-medium text-gray-900">@obj.Id</td>
+                            <td class="px-6 py-4 font-bold text-gray-900">@obj.DisplayId</td>
+
                             <td class="px-6 py-4">@obj.Name</td>
                             <td class="px-6 py-4">@obj.PhoneNumber</td>
                             <td class="px-6 py-4">@obj.ApplicationUser?.Email</td>
@@ -85,7 +86,7 @@
     <script>
         $(document).ready(function () {
             $('#tblData').DataTable({
-                "order": [[0, "desc"]] // Sort by Order ID (Newest first)
+                "order": [[0, "desc"]]
             });
         });
     </script>

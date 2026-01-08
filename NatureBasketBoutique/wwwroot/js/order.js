@@ -1,42 +1,64 @@
 ﻿var dataTable;
 
 $(document).ready(function () {
-    console.log("Order.js is loading..."); // Debug message
-    loadDataTable();
+    var url = window.location.search;
+    if (url.includes("inprocess")) {
+        loadDataTable("inprocess");
+    }
+    else {
+        if (url.includes("completed")) {
+            loadDataTable("completed");
+        }
+        else {
+            if (url.includes("pending")) {
+                loadDataTable("pending");
+            }
+            else {
+                if (url.includes("approved")) {
+                    loadDataTable("approved");
+                }
+                else {
+                    loadDataTable("all");
+                }
+            }
+        }
+    }
 });
 
-function loadDataTable() {
+function loadDataTable(status) {
     dataTable = $('#tblData').DataTable({
         "ajax": {
-            "url": '/Admin/Order/GetAll',
-            "dataSrc": "data"
+            "url": "/Admin/Order/GetAll?status=" + status
         },
         "columns": [
-            { "data": 'id', "width": "5%" },
-            { "data": 'name', "width": "20%" },
-            { "data": 'phoneNumber', "width": "15%" }, // Matches your JSON
+            // 1. DISPLAY ID (Shows A-101 instead of 101)
+            { "data": "displayId", "width": "5%" },
+
+            { "data": "name", "width": "20%" },
+            { "data": "phoneNumber", "width": "15%" },
+            { "data": "applicationUser.email", "width": "20%" },
             {
-                "data": 'applicationUser',
+                "data": "orderStatus",
+                "width": "10%",
                 "render": function (data) {
-                    // Safety Check: If user is deleted/null, show "N/A"
-                    return data ? data.email : "N/A";
-                },
-                "width": "20%"
+                    if (data == "Shipped") return `<span class="badge bg-success">${data}</span>`;
+                    if (data == "Cancelled") return `<span class="badge bg-danger">${data}</span>`;
+                    if (data == "InProcess") return `<span class="badge bg-info text-dark">${data}</span>`;
+                    return `<span class="badge bg-secondary">${data}</span>`;
+                }
             },
-            { "data": 'orderStatus', "width": "15%" },
-            { "data": 'orderTotal', "width": "10%" },
+            { "data": "orderTotal", "width": "10%" },
             {
-                "data": 'id',
+                "data": "id", // We keep the REAL ID here for the link
                 "render": function (data) {
                     return `
                         <div class="w-75 btn-group" role="group">
-                            <a href="/Admin/Order/Details?orderId=${data}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded">
-                                <i class="bi bi-pencil-square"></i> Details
-                            </a>
+                        <a href="/Admin/Order/Details?orderId=${data}"
+                        class="btn btn-primary mx-2"> <i class="bi bi-pencil-square"></i></a>
                         </div>
                     `
                 },
-                "width": "15%"
+                "width": "10%"
             }
         ]
     });

@@ -3,7 +3,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using NatureBasketBoutique.Models;
 using NatureBasketBoutique.Repository.IRepository;
 using NatureBasketBoutique.ViewModels;
-using Microsoft.AspNetCore.Hosting; // Required for IWebHostEnvironment
+using Microsoft.AspNetCore.Hosting;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
 
 namespace NatureBasketBoutique.Areas.Admin.Controllers
 {
@@ -55,16 +58,16 @@ namespace NatureBasketBoutique.Areas.Admin.Controllers
         [HttpPost]
         public IActionResult Upsert(ProductVM productVM, IFormFile? file)
         {
-            // --- FIX START: Prevent crash if no image is uploaded for a new product ---
+            // Prevent crash if no image is uploaded for a new product
             if (file == null && productVM.Product.Id == 0)
             {
                 ModelState.AddModelError("file", "Please upload an image for new products.");
             }
-            // --- FIX END ---
 
             if (ModelState.IsValid)
             {
                 string wwwRootPath = _webHostEnvironment.WebRootPath;
+
                 if (file != null)
                 {
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
@@ -83,11 +86,22 @@ namespace NatureBasketBoutique.Areas.Admin.Controllers
                         }
                     }
 
-                    // Save new file
-                    using (var fileStream = new FileStream(Path.Combine(productPath, fileName), FileMode.Create))
+                    // --- IMAGE RESIZING LOGIC START ---
+                    // Instead of simple CopyTo, we load, resize, and save using ImageSharp
+                    using (var image = Image.Load(file.OpenReadStream()))
                     {
-                        file.CopyTo(fileStream);
+                        // Resize to 800x800 (Fit inside box, maintain aspect ratio)
+                        image.Mutate(x => x.Resize(new ResizeOptions
+                        {
+                            Size = new Size(800, 800),
+                            Mode = ResizeMode.Max
+                        }));
+
+                        // Save the resized image to the server
+                        string finalPath = Path.Combine(productPath, fileName);
+                        image.Save(finalPath);
                     }
+                    // --- IMAGE RESIZING LOGIC END ---
 
                     productVM.Product.ImageUrl = @"\images\products\" + fileName;
                 }

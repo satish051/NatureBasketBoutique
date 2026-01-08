@@ -36,5 +36,32 @@ namespace NatureBasketBoutique.Models
         public string PostalCode { get; set; }
         [Required]
         public string Name { get; set; }
+
+        // --- NEW: Smart Display ID Logic ---
+        [NotMapped]
+        public string DisplayId
+        {
+            get
+            {
+                // LOGIC: 
+                // If ID is small (e.g. 5), it shows "5"
+                // If ID is > 100, it shows "A-101"
+                // If ID is > 1000, it shows "B-1001"
+
+                if (Id <= 100)
+                {
+                    return Id.ToString();
+                }
+                else if (Id > 100 && Id <= 1000)
+                {
+                    return $"A-{Id}";
+                }
+                else
+                {
+                    // For very large numbers, switch to B series
+                    return $"B-{Id}";
+                }
+            }
+        }
     }
 }
