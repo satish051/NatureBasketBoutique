@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using NatureBasketBoutique.Models;
 using NatureBasketBoutique.Repository.IRepository;
-using NatureBasketBoutique.Utility; // Needed for SessionExtensions
+using NatureBasketBoutique.Utility;
 using NatureBasketBoutique.ViewModels;
 using System.Security.Claims;
 
@@ -24,7 +24,7 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
         public IActionResult Index()
         {
             var claimsIdentity = (ClaimsIdentity)User.Identity;
-            var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
 
             ShoppingCartVM = new ShoppingCartVM()
             {
@@ -32,27 +32,20 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
                 OrderHeader = new OrderHeader()
             };
 
-            if (userId != null)
+            if (claim != null)
             {
-                // LOGGED IN: Check for session items to merge
-                MergeSessionCart(userId);
-
-                // Load from DB
-                ShoppingCartVM.ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == userId,
+                ShoppingCartVM.ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == claim.Value,
                     includeProperties: "Product");
             }
             else
             {
-                // GUEST: Load from Session
-                List<ShoppingCart> sessionCart = HttpContext.Session.Get<List<ShoppingCart>>("SessionCart");
-                if (sessionCart != null)
+                var sessionCart = HttpContext.Session.Get<List<ShoppingCart>>("SessionCart") ?? new List<ShoppingCart>();
+                foreach (var item in sessionCart)
                 {
-                    foreach (var item in sessionCart)
-                    {
-                        item.Product = _unitOfWork.Product.Get(u => u.Id == item.ProductId);
-                    }
-                    ShoppingCartVM.ShoppingCartList = sessionCart;
+                    item.Product = _unitOfWork.Product.Get(u => u.Id == item.ProductId);
+                    if (item.Product != null) item.Price = item.Product.Price;
                 }
+                ShoppingCartVM.ShoppingCartList = sessionCart;
             }
 
             foreach (var cart in ShoppingCartVM.ShoppingCartList)
@@ -64,24 +57,97 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
             return View(ShoppingCartVM);
         }
 
-        // GET: Checkout Page
-        [Authorize] // Forces Login
+        public IActionResult Plus(int cartId, int productId)
+        {
+            var claimsIdentity = (ClaimsIdentity)User.Identity;
+            var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (claim != null)
+            {
+                var cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.Id == cartId);
+                cartFromDb.Count += 1;
+                _unitOfWork.ShoppingCart.Update(cartFromDb);
+                _unitOfWork.Save();
+            }
+            else
+            {
+                var sessionCart = HttpContext.Session.Get<List<ShoppingCart>>("SessionCart");
+                var item = sessionCart.FirstOrDefault(u => u.ProductId == productId);
+                if (item != null) item.Count += 1;
+                HttpContext.Session.Set("SessionCart", sessionCart);
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult Minus(int cartId, int productId)
+        {
+            var claimsIdentity = (ClaimsIdentity)User.Identity;
+            var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (claim != null)
+            {
+                var cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.Id == cartId);
+                if (cartFromDb.Count <= 1)
+                {
+                    _unitOfWork.ShoppingCart.Remove(cartFromDb);
+                }
+                else
+                {
+                    cartFromDb.Count -= 1;
+                    _unitOfWork.ShoppingCart.Update(cartFromDb);
+                }
+                _unitOfWork.Save();
+            }
+            else
+            {
+                var sessionCart = HttpContext.Session.Get<List<ShoppingCart>>("SessionCart");
+                var item = sessionCart.FirstOrDefault(u => u.ProductId == productId);
+                if (item != null)
+                {
+                    if (item.Count <= 1) sessionCart.Remove(item);
+                    else item.Count -= 1;
+                }
+                HttpContext.Session.Set("SessionCart", sessionCart);
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult Remove(int cartId, int productId)
+        {
+            var claimsIdentity = (ClaimsIdentity)User.Identity;
+            var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (claim != null)
+            {
+                var cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.Id == cartId);
+                _unitOfWork.ShoppingCart.Remove(cartFromDb);
+                _unitOfWork.Save();
+            }
+            else
+            {
+                var sessionCart = HttpContext.Session.Get<List<ShoppingCart>>("SessionCart");
+                var item = sessionCart.FirstOrDefault(u => u.ProductId == productId);
+                if (item != null) sessionCart.Remove(item);
+                HttpContext.Session.Set("SessionCart", sessionCart);
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        [Authorize]
         public IActionResult Summary()
         {
             var claimsIdentity = (ClaimsIdentity)User.Identity;
             var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
-            // CRITICAL: Merge items if they just logged in and came straight here
-            MergeSessionCart(userId);
-
             ShoppingCartVM = new ShoppingCartVM()
             {
                 ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == userId,
-                                                                 includeProperties: "Product"),
+                includeProperties: "Product"),
                 OrderHeader = new OrderHeader()
             };
 
             var applicationUser = _unitOfWork.ApplicationUser.Get(u => u.Id == userId);
+
             ShoppingCartVM.OrderHeader.ApplicationUser = applicationUser;
             ShoppingCartVM.OrderHeader.Name = applicationUser.Name;
             ShoppingCartVM.OrderHeader.PhoneNumber = applicationUser.PhoneNumber;
@@ -99,32 +165,40 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
             return View(ShoppingCartVM);
         }
 
-        // POST: Place Order
+        // --- NEW: PLACE ORDER LOGIC ---
         [HttpPost]
         [ActionName("Summary")]
-        [Authorize]
+        [ValidateAntiForgeryToken]
         public IActionResult SummaryPOST()
         {
             var claimsIdentity = (ClaimsIdentity)User.Identity;
             var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
+            // 1. Load Cart Items (Because 'BindProperty' only binds the Header fields)
             ShoppingCartVM.ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == userId,
-                                                                             includeProperties: "Product");
+                includeProperties: "Product");
 
+            // 2. Set Order Data
             ShoppingCartVM.OrderHeader.OrderDate = DateTime.Now;
             ShoppingCartVM.OrderHeader.ApplicationUserId = userId;
-            ShoppingCartVM.OrderHeader.OrderStatus = SD.StatusPending;
-            ShoppingCartVM.OrderHeader.PaymentStatus = SD.PaymentStatusPending;
 
+            // 3. Calculate Total
             foreach (var cart in ShoppingCartVM.ShoppingCartList)
             {
                 cart.Price = cart.Product.Price;
                 ShoppingCartVM.OrderHeader.OrderTotal += (cart.Price * cart.Count);
             }
 
+            // 4. Set Status 
+            // Since we don't have Stripe/PayPal yet, we default to "Pending"
+            ShoppingCartVM.OrderHeader.PaymentStatus = SD.PaymentStatusPending;
+            ShoppingCartVM.OrderHeader.OrderStatus = SD.StatusPending;
+
+            // 5. Save Order Header
             _unitOfWork.OrderHeader.Add(ShoppingCartVM.OrderHeader);
             _unitOfWork.Save();
 
+            // 6. Save Order Details (The Items)
             foreach (var cart in ShoppingCartVM.ShoppingCartList)
             {
                 OrderDetail orderDetail = new()
@@ -135,135 +209,21 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
                     Count = cart.Count
                 };
                 _unitOfWork.OrderDetail.Add(orderDetail);
+                _unitOfWork.Save();
             }
-            _unitOfWork.Save();
 
+            // 7. Clear Shopping Cart
             _unitOfWork.ShoppingCart.RemoveRange(ShoppingCartVM.ShoppingCartList);
             _unitOfWork.Save();
 
+            // 8. Redirect to Confirmation
             return RedirectToAction(nameof(OrderConfirmation), new { id = ShoppingCartVM.OrderHeader.Id });
         }
 
+        // --- NEW: CONFIRMATION PAGE ---
         public IActionResult OrderConfirmation(int id)
         {
             return View(id);
-        }
-
-        // --- HELPER METHOD TO MERGE CART ---
-        private void MergeSessionCart(string userId)
-        {
-            List<ShoppingCart> sessionCart = HttpContext.Session.Get<List<ShoppingCart>>("SessionCart");
-            if (sessionCart != null && sessionCart.Count > 0)
-            {
-                foreach (var item in sessionCart)
-                {
-                    item.ApplicationUserId = userId;
-                    item.Id = 0; // Reset ID so DB creates a new entry
-
-                    var existingDbItem = _unitOfWork.ShoppingCart.Get(u => u.ApplicationUserId == userId && u.ProductId == item.ProductId);
-                    if (existingDbItem != null)
-                    {
-                        // Update existing item count
-                        existingDbItem.Count += item.Count;
-                        _unitOfWork.ShoppingCart.Update(existingDbItem);
-                    }
-                    else
-                    {
-                        // Add new item
-                        _unitOfWork.ShoppingCart.Add(item);
-                    }
-                }
-                _unitOfWork.Save();
-                HttpContext.Session.Remove("SessionCart"); // Clear session
-            }
-        }
-
-        // --- CART ACTIONS (Plus/Minus/Remove) ---
-        // Note: For full guest support, these need session logic too.
-        // For now, we assume users manage cart mostly after login or we can add that next.
-        public IActionResult Plus(int cartId, int productId)
-        {
-            if (cartId == 0)
-            {
-                // ============ GUEST LOGIC (Session) ============
-                List<ShoppingCart> sessionCart = HttpContext.Session.Get<List<ShoppingCart>>("SessionCart");
-                var cartItem = sessionCart.FirstOrDefault(u => u.ProductId == productId);
-                if (cartItem != null)
-                {
-                    cartItem.Count += 1;
-                    HttpContext.Session.Set("SessionCart", sessionCart);
-                }
-            }
-            else
-            {
-                // ============ LOGGED IN LOGIC (Database) ============
-                var cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.Id == cartId);
-                cartFromDb.Count += 1;
-                _unitOfWork.ShoppingCart.Update(cartFromDb);
-                _unitOfWork.Save();
-            }
-            return RedirectToAction(nameof(Index));
-        }
-
-        public IActionResult Minus(int cartId, int productId)
-        {
-            if (cartId == 0)
-            {
-                // ============ GUEST LOGIC (Session) ============
-                List<ShoppingCart> sessionCart = HttpContext.Session.Get<List<ShoppingCart>>("SessionCart");
-                var cartItem = sessionCart.FirstOrDefault(u => u.ProductId == productId);
-                if (cartItem != null)
-                {
-                    if (cartItem.Count <= 1)
-                    {
-                        sessionCart.Remove(cartItem);
-                    }
-                    else
-                    {
-                        cartItem.Count -= 1;
-                    }
-                    HttpContext.Session.Set("SessionCart", sessionCart);
-                }
-            }
-            else
-            {
-                // ============ LOGGED IN LOGIC (Database) ============
-                var cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.Id == cartId);
-                if (cartFromDb.Count <= 1)
-                {
-                    _unitOfWork.ShoppingCart.Remove(cartFromDb);
-                }
-                else
-                {
-                    cartFromDb.Count -= 1;
-                    _unitOfWork.ShoppingCart.Update(cartFromDb);
-                }
-                _unitOfWork.Save();
-            }
-            return RedirectToAction(nameof(Index));
-        }
-
-        public IActionResult Remove(int cartId, int productId)
-        {
-            if (cartId == 0)
-            {
-                // ============ GUEST LOGIC (Session) ============
-                List<ShoppingCart> sessionCart = HttpContext.Session.Get<List<ShoppingCart>>("SessionCart");
-                var cartItem = sessionCart.FirstOrDefault(u => u.ProductId == productId);
-                if (cartItem != null)
-                {
-                    sessionCart.Remove(cartItem);
-                    HttpContext.Session.Set("SessionCart", sessionCart);
-                }
-            }
-            else
-            {
-                // ============ LOGGED IN LOGIC (Database) ============
-                var cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.Id == cartId);
-                _unitOfWork.ShoppingCart.Remove(cartFromDb);
-                _unitOfWork.Save();
-            }
-            return RedirectToAction(nameof(Index));
         }
     }
 }

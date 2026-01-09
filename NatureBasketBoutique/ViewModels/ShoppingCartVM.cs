@@ -1,8 +1,12 @@
-﻿namespace NatureBasketBoutique.ViewModels
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using NatureBasketBoutique.Models;
+
+namespace NatureBasketBoutique.ViewModels
 {
     public class ShoppingCartVM
     {
         public IEnumerable<ShoppingCart> ShoppingCartList { get; set; }
-        public OrderHeader OrderHeader { get; set; } // We use this to store the Total Amount
+        public OrderHeader OrderHeader { get; set; }
     }
 }

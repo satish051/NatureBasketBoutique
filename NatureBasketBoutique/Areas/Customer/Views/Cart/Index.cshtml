@@ -1,86 +1,89 @@
-﻿@model ShoppingCartVM
+﻿@model NatureBasketBoutique.ViewModels.ShoppingCartVM
+
+@{
+    ViewData["Title"] = "Shopping Cart";
+}
 
 <form method="post">
-    <br />
-    <div class="container mx-auto px-4">
-        <div class="flex flex-col md:flex-row gap-4">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-end mb-6">
+            <h2 class="text-3xl font-bold text-gray-800">Your Shopping Cart</h2>
+            <a asp-area="Customer" asp-controller="Home" asp-action="Index" class="text-green-600 hover:text-green-800 font-semibold text-sm">
+                <i class="bi bi-arrow-left"></i> Continue Shopping
+            </a>
+        </div>
 
-            <div class="w-full md:w-3/4 bg-white rounded-lg shadow-md overflow-hidden">
-                <div class="bg-gray-800 text-white p-4 flex justify-between items-center">
-                    <h2 class="text-xl font-semibold"><i class="bi bi-cart3"></i> Shopping Cart</h2>
-                    <a asp-area="Customer" asp-controller="Home" asp-action="Index" class="text-sm hover:text-green-400 text-gray-300">
-                        Continue Shopping
-                    </a>
-                </div>
-
-                <div class="p-4">
-                    @foreach (var item in Model.ShoppingCartList)
-                    {
-                        <div class="flex flex-col md:flex-row items-center justify-between border-b border-gray-200 py-4 gap-4">
-
-                            <div class="w-24 h-24 flex-shrink-0">
-                                <img src="@item.Product.ImageUrl" class="w-full h-full object-cover rounded-md" />
-                            </div>
-
-                            <div class="flex-grow text-center md:text-left">
-                                <h5 class="text-lg font-bold text-gray-800">@item.Product.Title</h5>
-                                <p class="text-sm text-gray-600">@Html.Raw(item.Product.Description)</p>
-                            </div>
-
-                            <div class="flex items-center gap-4">
-                                <div class="text-gray-800 font-semibold">
-                                    @item.Product.Price.ToString("c")
-                                    <span class="text-xs text-gray-500">x @item.Count</span>
-                                </div>
-
-                                <div class="flex items-center border border-gray-300 rounded">
-                                    <a asp-action="Plus" asp-route-cartId="@item.Id" asp-route-productId="@item.ProductId" class="btn btn-primary">
-                                        <i class="bi bi-plus-square"></i>
-                                    </a>
-
-                                    <a asp-action="Minus" asp-route-cartId="@item.Id" asp-route-productId="@item.ProductId" class="btn btn-warning">
-                                        <i class="bi bi-dash-square"></i>
-                                    </a>
-
-                                    <a asp-action="Remove" asp-route-cartId="@item.Id" asp-route-productId="@item.ProductId" class="btn btn-danger">
-                                        <i class="bi bi-trash-fill"></i>
-                                    </a>
-                                </div>
-
-                                <div class="text-green-700 font-bold w-20 text-right">
-                                    @((item.Product.Price * item.Count).ToString("c"))
-                                </div>
-
-                                <a asp-action="Remove" asp-route-cartId="@item.Id" class="text-red-500 hover:text-red-700 p-2">
-                                    <i class="bi bi-trash-fill text-xl"></i>
-                                </a>
-                            </div>
-                        </div>
-                    }
-                    @if (!Model.ShoppingCartList.Any())
-                    {
-                        <div class="text-center py-10 text-gray-500">
-                            Your cart is empty.
-                        </div>
-                    }
-                </div>
+        <div class="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-200">
+            <div class="hidden md:grid grid-cols-12 bg-gray-50 border-b border-gray-200 py-3 px-6 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <div class="col-span-6">Product</div>
+                <div class="col-span-3 text-center">Quantity</div>
+                <div class="col-span-2 text-right">Price</div>
+                <div class="col-span-1 text-center"></div>
             </div>
 
-            <div class="w-full md:w-1/4">
-                <div class="bg-white rounded-lg shadow-md p-4">
-                    <h4 class="text-lg font-bold text-gray-700 border-b pb-2 mb-4">Order Summary</h4>
+            @foreach (var item in Model.ShoppingCartList)
+            {
+                <div class="grid grid-cols-1 md:grid-cols-12 items-center gap-4 p-6 border-b border-gray-100 hover:bg-gray-50 transition">
 
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-gray-600">Total (NPR)</span>
-                        <span class="text-xl font-bold text-green-700">@Model.OrderHeader.OrderTotal.ToString("c")</span>
+                    <div class="col-span-6 flex items-center">
+                        <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                            <img src="@item.Product.ImageUrl" alt="@item.Product.Title" class="h-full w-full object-cover object-center">
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-base font-bold text-gray-900">
+                                <a asp-area="Customer" asp-controller="Home" asp-action="Details" asp-route-productId="@item.ProductId">
+                                    @item.Product.Title
+                                </a>
+                            </h3>
+                            <p class="mt-1 text-sm text-gray-500">@Html.Raw(item.Product.Description.Length > 50 ? item.Product.Description.Substring(0, 49) + "..." : item.Product.Description)</p>
+                        </div>
                     </div>
 
-                    @if (Model.ShoppingCartList.Any())
-                    {
-                        <a asp-action="Summary" class="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-center shadow transition">
-                            Proceed to Summary
+                    <div class="col-span-3 flex justify-center items-center">
+                        <div class="flex items-center border border-gray-300 rounded-lg">
+                            <a asp-action="Minus" asp-route-cartId="@item.Id" asp-route-productId="@item.ProductId"
+                               class="px-3 py-1 text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition rounded-l-lg">
+                                <i class="bi bi-dash"></i>
+                            </a>
+                            <span class="px-3 py-1 text-gray-700 font-bold border-l border-r border-gray-300">@item.Count</span>
+                            <a asp-action="Plus" asp-route-cartId="@item.Id" asp-route-productId="@item.ProductId"
+                               class="px-3 py-1 text-green-600 hover:bg-green-100 hover:text-green-900 transition rounded-r-lg">
+                                <i class="bi bi-plus"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-span-2 text-right">
+                        <p class="text-sm font-bold text-gray-900">
+                            NPR @((item.Price * item.Count).ToString("0.00"))
+                        </p>
+                        <p class="text-xs text-gray-500">
+                            @item.Count x NPR @item.Price
+                        </p>
+                    </div>
+
+                    <div class="col-span-1 text-center">
+                        <a asp-action="Remove" asp-route-cartId="@item.Id" asp-route-productId="@item.ProductId"
+                           class="text-red-500 hover:text-red-700 transition p-2 rounded-full hover:bg-red-50">
+                            <i class="bi bi-trash-fill text-lg"></i>
                         </a>
-                    }
+                    </div>
+                </div>
+            }
+
+            <div class="bg-gray-50 p-6 flex flex-col md:flex-row justify-between items-center">
+                <div class="text-gray-500 text-sm mb-4 md:mb-0">
+                    Calculated at checkout
+                </div>
+                <div class="flex flex-col items-end">
+                    <div class="flex items-end gap-4 mb-4">
+                        <span class="text-gray-600 font-medium">Total:</span>
+                        <span class="text-2xl font-bold text-green-700">NPR @Model.OrderHeader.OrderTotal.ToString("0.00")</span>
+                    </div>
+
+                    <a asp-action="Summary" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition transform hover:-translate-y-0.5">
+                        Proceed to Checkout
+                    </a>
                 </div>
             </div>
         </div>
