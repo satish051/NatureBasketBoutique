@@ -54,81 +54,71 @@ namespace NatureBasketBoutique.Areas.Admin.Controllers
             }
         }
 
-        // POST: Upsert (Update + Insert)
-        [HttpPost]
-        public IActionResult Upsert(ProductVM productVM, IFormFile? file)
-        {
-            // Prevent crash if no image is uploaded for a new product
-            if (file == null && productVM.Product.Id == 0)
-            {
-                ModelState.AddModelError("file", "Please upload an image for new products.");
-            }
 
+        [HttpPost]
+        public IActionResult Upsert(Product product, IFormFile? file)
+        {
             if (ModelState.IsValid)
             {
                 string wwwRootPath = _webHostEnvironment.WebRootPath;
 
+                // 1. Check if file was uploaded
                 if (file != null)
                 {
+                    // Generates a random name (e.g., "skdjh23-apple.jpg")
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                    string productPath = Path.Combine(wwwRootPath, @"images\products");
+                    string productPath = Path.Combine(wwwRootPath, @"images\product");
 
+                    // Ensure directory exists (optional, but good practice)
                     if (!Directory.Exists(productPath))
-                        Directory.CreateDirectory(productPath);
-
-                    // Delete old image if exists (Update scenario)
-                    if (!string.IsNullOrEmpty(productVM.Product.ImageUrl))
                     {
-                        var oldImagePath = Path.Combine(wwwRootPath, productVM.Product.ImageUrl.TrimStart('\\'));
+                        Directory.CreateDirectory(productPath);
+                    }
+
+                    // 2. Delete Old Image if updating
+                    if (!string.IsNullOrEmpty(product.ImageUrl))
+                    {
+                        var oldImagePath = Path.Combine(wwwRootPath, product.ImageUrl.TrimStart('\\'));
+
                         if (System.IO.File.Exists(oldImagePath))
                         {
                             System.IO.File.Delete(oldImagePath);
                         }
                     }
 
-                    // --- IMAGE RESIZING LOGIC START ---
-                    // Instead of simple CopyTo, we load, resize, and save using ImageSharp
-                    using (var image = Image.Load(file.OpenReadStream()))
+                    // 3. Save New Image
+                    using (var fileStream = new FileStream(Path.Combine(productPath, fileName), FileMode.Create))
                     {
-                        // Resize to 800x800 (Fit inside box, maintain aspect ratio)
-                        image.Mutate(x => x.Resize(new ResizeOptions
-                        {
-                            Size = new Size(800, 800),
-                            Mode = ResizeMode.Max
-                        }));
-
-                        // Save the resized image to the server
-                        string finalPath = Path.Combine(productPath, fileName);
-                        image.Save(finalPath);
+                        file.CopyTo(fileStream);
                     }
-                    // --- IMAGE RESIZING LOGIC END ---
 
-                    productVM.Product.ImageUrl = @"\images\products\" + fileName;
+                    // Update Model Property
+                    product.ImageUrl = @"\images\product\" + fileName;
                 }
 
-                // Save Data
-                if (productVM.Product.Id == 0)
+                // 4. Save Product to DB
+                if (product.Id == 0)
                 {
-                    _unitOfWork.Product.Add(productVM.Product);
-                    TempData["Success"] = "Product created successfully";
+                    _unitOfWork.Product.Add(product);
                 }
                 else
                 {
-                    _unitOfWork.Product.Update(productVM.Product);
-                    TempData["Success"] = "Product updated successfully";
+                    _unitOfWork.Product.Update(product);
                 }
 
                 _unitOfWork.Save();
+                TempData["success"] = "Product saved successfully";
                 return RedirectToAction("Index");
             }
 
-            // Reload dropdown if validation fails
-            productVM.CategoryList = _unitOfWork.Category.GetAll().Select(u => new SelectListItem
+            // If we fail, reload the dropdown list so the page doesn't crash
+            ViewBag.CategoryList = _unitOfWork.Category.GetAll().Select(u => new SelectListItem
             {
                 Text = u.Name,
                 Value = u.Id.ToString()
             });
-            return View(productVM);
+
+            return View(product);
         }
 
         // GET: Show Delete Confirmation Page

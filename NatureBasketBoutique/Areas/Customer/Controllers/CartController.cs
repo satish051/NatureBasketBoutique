@@ -133,6 +133,7 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // GET: Summary (Checkout Page)
         [Authorize]
         public IActionResult Summary()
         {
@@ -145,6 +146,15 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
                 includeProperties: "Product"),
                 OrderHeader = new OrderHeader()
             };
+
+            // --- SECURITY CHECK: PREVENT EMPTY CART CHECKOUT ---
+            if (ShoppingCartVM.ShoppingCartList.Count() == 0)
+            {
+                // Optional: Add a notification message here if you have Toastr set up
+                // TempData["error"] = "Your cart is empty!";
+                return RedirectToAction(nameof(Index));
+            }
+            // ---------------------------------------------------
 
             var applicationUser = _unitOfWork.ApplicationUser.Get(u => u.Id == userId);
 

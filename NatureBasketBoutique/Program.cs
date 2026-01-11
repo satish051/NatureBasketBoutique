@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services; // Ensure this is here
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using NatureBasketBoutique.Data;
 using NatureBasketBoutique.Models;
 using NatureBasketBoutique.Repository;
 using NatureBasketBoutique.Repository.IRepository;
-using NatureBasketBoutique.Utility;             // Ensure this is here
+using NatureBasketBoutique.Utility;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +27,6 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = $"/Identity/Account/Login";
@@ -35,14 +34,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
 });
 
-
 // 3. Register Services (Order Matters!)
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped<IEmailSender, EmailSender>(); // <-- Added correctly here
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options => {
@@ -50,7 +47,6 @@ builder.Services.AddSession(options => {
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
-
 
 // 4. Build the App (Locks the container)
 var app = builder.Build();
@@ -73,6 +69,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
 
+// --- CRITICAL FIX START ---
+// This enables the /Admin/ URL routing
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+// --- CRITICAL FIX END ---
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{area=Customer}/{controller=Home}/{action=Index}/{id?}");
@@ -83,7 +86,14 @@ app.MapRazorPages();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    await DbInitializer.SeedRolesAndAdminAsync(services);
+    try
+    {
+        await DbInitializer.SeedRolesAndAdminAsync(services);
+    }
+    catch (Exception ex)
+    {
+        // Log errors or ignore if seed class doesn't exist yet
+    }
 }
 
 app.Run();

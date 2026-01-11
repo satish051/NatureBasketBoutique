@@ -1,55 +1,71 @@
-﻿@model List<Category>
+﻿@model IEnumerable<Category>
 
 @{
-    ViewData["Title"] = "Category List";
+    ViewData["Title"] = "Category Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+<link rel="stylesheet" href="//cdn.datatables.net/1.13.3/css/jquery.dataTables.min.css" />
+
 <div class="container mx-auto px-4 py-8">
+
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-3xl font-bold text-gray-800">Category List</h2>
-        <a asp-controller="Category" asp-action="Create" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
-            <i class="bi bi-plus-circle"></i> Create New Category
+        <h2 class="text-3xl font-bold text-gray-800">
+            <i class="bi bi-tags-fill"></i> Manage Categories
+        </h2>
+
+        <a asp-controller="Category" asp-action="Create" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow transition flex items-center">
+            <i class="bi bi-plus-circle mr-2"></i> Create New Category
         </a>
     </div>
 
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
-        <table class="min-w-full leading-normal">
-            <thead>
-                <tr>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Category Name
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Display Order
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Actions
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var obj in Model.OrderBy(u => u.DisplayOrder))
-                {
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
+        <div class="p-4">
+            <table id="tblData" class="w-full text-sm text-left text-gray-500 hover:table-fixed">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
                     <tr>
-                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap font-bold">@obj.Name</p>
-                        </td>
-                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">@obj.DisplayOrder</p>
-                        </td>
-                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
-                            <div class="flex justify-center gap-2">
-                                <a asp-controller="Category" asp-action="Edit" asp-route-id="@obj.Id" class="text-blue-600 hover:text-blue-900 mx-2">
-                                    <i class="bi bi-pencil-square text-xl"></i>
-                                </a>
-                                <a asp-controller="Category" asp-action="Delete" asp-route-id="@obj.Id" class="text-red-600 hover:text-red-900 mx-2">
-                                    <i class="bi bi-trash-fill text-xl"></i>
-                                </a>
-                            </div>
-                        </td>
+                        <th class="px-6 py-3">Category Name</th>
+                        <th class="px-6 py-3">Display Order</th>
+                        <th class="px-6 py-3 text-center">Actions</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var obj in Model.OrderBy(u => u.DisplayOrder))
+                    {
+                        <tr class="bg-white border-b hover:bg-gray-50 transition">
+
+                            <td class="px-6 py-4 font-medium text-gray-900">
+                                @obj.Name
+                            </td>
+
+                            <td class="px-6 py-4">
+                                @obj.DisplayOrder
+                            </td>
+
+                            <td class="px-6 py-4 text-center space-x-4">
+                                <a asp-action="Edit" asp-route-id="@obj.Id"
+                                   class="text-blue-600 hover:text-blue-800 transition text-xl" title="Edit">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+
+                                <a asp-action="Delete" asp-route-id="@obj.Id"
+                                   class="text-red-600 hover:text-red-800 transition text-xl" title="Delete">
+                                    <i class="bi bi-trash-fill"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="//cdn.datatables.net/1.13.3/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#tblData').DataTable();
+        });
+    </script>
+}

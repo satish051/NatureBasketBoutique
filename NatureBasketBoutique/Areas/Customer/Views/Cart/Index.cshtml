@@ -76,14 +76,25 @@
                     Calculated at checkout
                 </div>
                 <div class="flex flex-col items-end">
+                    
+
                     <div class="flex items-end gap-4 mb-4">
                         <span class="text-gray-600 font-medium">Total:</span>
                         <span class="text-2xl font-bold text-green-700">NPR @Model.OrderHeader.OrderTotal.ToString("0.00")</span>
                     </div>
 
-                    <a asp-action="Summary" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition transform hover:-translate-y-0.5">
-                        Proceed to Checkout
-                    </a>
+                    @if (Model.ShoppingCartList.Count() > 0)
+                    {
+                        <a asp-action="Summary" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition transform hover:-translate-y-0.5">
+                            Proceed to Checkout
+                        </a>
+                    }
+                    else
+                    {
+                        <button disabled class="bg-gray-300 text-gray-500 font-bold py-3 px-8 rounded-lg cursor-not-allowed">
+                            Cart is Empty
+                        </button>
+                    }
                 </div>
             </div>
         </div>

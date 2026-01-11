@@ -1,7 +1,20 @@
-﻿@model IEnumerable<NatureBasketBoutique.Models.Product>
+﻿@using System.Linq
+@model IEnumerable<NatureBasketBoutique.Models.Product>
 
 @{
     ViewData["Title"] = "Home";
+
+    // LOGIC: Get 3 distinct categories for the "Curated Collections" section
+    var featuredCategories = Model.Where(u => u.Category != null)
+                                  .GroupBy(u => u.Category.Id)
+                                  .Select(g => new
+                                  {
+                                      Category = g.First().Category,
+                                      ImageUrl = g.First().ImageUrl,
+                                      Count = g.Count()
+                                  })
+                                  .Take(3)
+                                  .ToList();
 }
 
 <div class="relative bg-green-900 overflow-hidden rounded-xl mx-4 mt-4 shadow-2xl">
@@ -14,7 +27,7 @@
             Pure Nature, <span class="text-green-400">Delivered.</span>
         </h1>
         <p class="mt-6 text-xl text-green-100 max-w-3xl mx-auto">
-            Experience the freshest organic collections handpicked for your lifestyle. Sustainable, ethical, and premium quality.
+            Experience the freshest organic collections handpicked for your lifestyle.
         </p>
         <div class="mt-10">
             <a href="#shop-products" class="inline-block bg-green-500 border border-transparent py-3 px-8 rounded-full font-bold text-white hover:bg-green-600 transition transform hover:-translate-y-1 shadow-lg">
@@ -27,25 +40,19 @@
 <div class="container mx-auto px-4 py-16">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
         <div class="p-6 bg-white rounded-lg shadow-sm border hover:shadow-md transition">
-            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-                <i class="bi bi-truck"></i>
-            </div>
+            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="bi bi-truck"></i></div>
             <h3 class="text-lg font-bold">Fast Delivery</h3>
-            <p class="text-gray-500 text-sm mt-2">Free shipping on all orders over $50.</p>
+            <p class="text-gray-500 text-sm mt-2">Free shipping on all orders over NPR 5000.</p>
         </div>
         <div class="p-6 bg-white rounded-lg shadow-sm border hover:shadow-md transition">
-            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-                <i class="bi bi-shield-check"></i>
-            </div>
+            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="bi bi-shield-check"></i></div>
             <h3 class="text-lg font-bold">Secure Payment</h3>
-            <p class="text-gray-500 text-sm mt-2">100% secure payment with Stripe & PayPal.</p>
+            <p class="text-gray-500 text-sm mt-2">100% secure payment with Khalti & eSewa.</p>
         </div>
         <div class="p-6 bg-white rounded-lg shadow-sm border hover:shadow-md transition">
-            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-                <i class="bi bi-arrow-repeat"></i>
-            </div>
+            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="bi bi-arrow-repeat"></i></div>
             <h3 class="text-lg font-bold">Easy Returns</h3>
-            <p class="text-gray-500 text-sm mt-2">30 days money-back guarantee.</p>
+            <p class="text-gray-500 text-sm mt-2">7 days money-back guarantee.</p>
         </div>
     </div>
 </div>
@@ -56,40 +63,91 @@
             <h2 class="text-3xl font-bold text-gray-800">Trending Products</h2>
             <p class="text-gray-500 mt-1">Our customer favorites this week</p>
         </div>
-        <a href="#" class="text-green-600 font-bold hover:underline">View All <i class="bi bi-arrow-right"></i></a>
+        <a asp-controller="Home" asp-action="Shop" class="text-green-600 font-bold hover:underline">
+            View All <i class="bi bi-arrow-right"></i>
+        </a>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        @foreach (var product in Model)
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach (var product in Model.Take(6))
         {
             <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition duration-300 transform hover:-translate-y-2 border border-gray-100 flex flex-col h-full">
                 <div class="relative h-64 overflow-hidden group">
                     <img src="@product.ImageUrl" class="w-full h-full object-cover transition duration-500 group-hover:scale-110" alt="@product.Title" />
                     <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
-                        <a asp-action="Details" asp-route-productId="@product.Id" class="bg-white text-gray-900 py-2 px-6 rounded-full font-bold hover:bg-green-500 hover:text-white transition">
-                            View Details
-                        </a>
+                        <a asp-action="Details" asp-route-productId="@product.Id" class="bg-white text-gray-900 py-2 px-6 rounded-full font-bold hover:bg-green-500 hover:text-white transition">View Details</a>
                     </div>
                 </div>
-
                 <div class="p-5 flex-grow flex flex-col">
-                    <div class="text-xs text-green-600 font-bold uppercase tracking-wide mb-1">
-                        @product.Category.Name
-                    </div>
+                    <div class="text-xs text-green-600 font-bold uppercase tracking-wide mb-1">@product.Category.Name</div>
                     <h3 class="text-lg font-bold text-gray-900 mb-2 truncate">@product.Title</h3>
-                    <p class="text-sm text-gray-500 mb-4 line-clamp-2">@Html.Raw(product.Description)</p>
-
                     <div class="mt-auto flex justify-between items-center pt-4 border-t border-gray-100">
-                        <div>
-                            <span class="text-sm text-gray-400 line-through">NPR @product.ListPrice</span>
-                            <div class="text-xl font-bold text-green-700">NPR @product.Price</div>
-                        </div>
-                        <a asp-action="Details" asp-route-productId="@product.Id" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-green-600 hover:text-white transition">
-                            <i class="bi bi-bag-plus-fill"></i>
-                        </a>
+                        <div class="text-xl font-bold text-green-700">NPR @product.Price</div>
+                        <a asp-action="Details" asp-route-productId="@product.Id" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-green-600 hover:text-white transition"><i class="bi bi-bag-plus-fill"></i></a>
                     </div>
                 </div>
             </div>
         }
+    </div>
+</div>
+
+<div class="bg-gray-50 py-16">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-10">
+            <h2 class="text-3xl font-bold text-gray-800">Curated Collections</h2>
+            <p class="text-gray-500 mt-2">Explore our most popular categories</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            @foreach (var item in featuredCategories)
+            {
+                <a asp-action="Shop" asp-route-categoryId="@item.Category.Id" class="group relative rounded-2xl overflow-hidden shadow-lg h-80 block">
+                    <img src="@item.ImageUrl" class="w-full h-full object-cover transition duration-700 group-hover:scale-110" alt="@item.Category.Name">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80 group-hover:opacity-90 transition"></div>
+                    <div class="absolute bottom-0 left-0 p-8 w-full">
+                        <h3 class="text-2xl font-bold text-white mb-1 group-hover:translate-x-2 transition duration-300">@item.Category.Name</h3>
+                        <p class="text-gray-300 text-sm mb-4 group-hover:translate-x-2 transition duration-300 delay-75">@item.Count items available</p>
+                        <span class="inline-flex items-center text-green-400 font-bold text-sm uppercase tracking-wider group-hover:text-white transition">
+                            Explore <i class="bi bi-arrow-right ml-2 group-hover:translate-x-1 transition"></i>
+                        </span>
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="relative py-24 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="relative rounded-3xl overflow-hidden shadow-2xl h-[500px]">
+
+            <img src="https://images.unsplash.com/photo-1596162955779-9c8c7c2203b5?q=80&w=2070&auto=format&fit=crop"
+                 class="w-full h-full object-cover object-center transform hover:scale-105 transition duration-[2000ms]"
+                 alt="Lifestyle Inspiration">
+
+            <div class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+                <div class="text-center max-w-2xl px-6">
+                    <span class="text-green-300 font-bold tracking-widest uppercase text-sm mb-3 block">
+                        Our Inspiration
+                    </span>
+                    <h2 class="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight drop-shadow-lg">
+                        Bring warmth, simplicity, and nature into every corner of your home.
+                    </h2>
+                    <p class="text-lg text-gray-200 mb-8 font-light">
+                        Our handcrafted collections are designed not just to store things, but to bring a sense of peace and organic beauty to your living space.
+                    </p>
+                    <a asp-controller="Home" asp-action="Shop"
+                       class="inline-block bg-white text-green-900 font-bold py-3 px-8 rounded-full shadow-xl hover:bg-green-600 hover:text-white transition transform hover:-translate-y-1">
+                        Get Inspired
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-16">
+        <a asp-controller="Home" asp-action="Shop" class="inline-block border-2 border-green-600 text-green-600 font-bold py-3 px-10 rounded-full hover:bg-green-600 hover:text-white transition duration-300">
+            View All Products
+        </a>
     </div>
 </div>

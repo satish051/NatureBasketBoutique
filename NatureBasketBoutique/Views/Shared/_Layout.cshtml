@@ -18,24 +18,25 @@
             <div class="flex flex-wrap justify-between items-center">
 
                 <a class="text-2xl font-bold text-green-700 flex items-center gap-2 mr-6" asp-area="Customer" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-basket-fill"></i> NatureBasket
+                    <i class="bi bi-basket-fill"></i> Nature Basket Boutique
                 </a>
 
                 <div class="flex-grow max-w-md hidden md:block mx-4">
                     <form asp-area="Customer" asp-controller="Home" asp-action="Shop" method="get" class="relative group">
                         <input type="text" name="searchString" placeholder="Search for fresh products..."
-                               class="w-full bg-gray-100 text-gray-700 border border-gray-200 rounded-full py-2 px-4 pl-10 focus:outline-none focus:bg-white focus:border-green-500 transition shadow-sm" />
+                               class="w-full bg-gray-100 text-gray-700 border border-gray-200 rounded-full py-2 px-4 pl-12
+                                    focus:outline-none focus:bg-white focus:border-green-500 transition shadow-sm" />
                         <button type="submit" class="absolute left-0 top-0 mt-2 ml-3 text-gray-500 group-focus-within:text-green-600">
                             <i class="bi bi-search"></i>
                         </button>
                     </form>
                 </div>
 
-                <div class="hidden md:flex space-x-6 items-center text-sm font-semibold uppercase tracking-wide">
-                    <a class="text-gray-600 hover:text-green-600 transition" asp-area="Customer" asp-controller="Home" asp-action="Index">Home</a>
-                    <a class="text-gray-600 hover:text-green-600 transition" asp-area="Customer" asp-controller="Home" asp-action="Shop">Products</a>
-                    <a class="text-gray-600 hover:text-green-600 transition" asp-area="Customer" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                    
+                <div class="flex items-center space-x-6">
+                    <div class="hidden md:flex space-x-6 items-center text-sm font-semibold uppercase tracking-wide">
+                        <a class="text-gray-600 hover:text-green-600 transition" asp-area="Customer" asp-controller="Home" asp-action="Index">Home</a>
+                        <a class="text-gray-600 hover:text-green-600 transition" asp-area="Customer" asp-controller="Home" asp-action="Shop">Products</a>
+
                         @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
                         {
                             <div class="relative group z-50">
@@ -54,15 +55,14 @@
 
                     <a class="relative text-gray-500 hover:text-green-600 transition" asp-area="Customer" asp-controller="Cart" asp-action="Index">
                         <i class="bi bi-cart3 text-2xl"></i>
-                        @* <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span> *@
                     </a>
 
                     <partial name="_LoginPartial" />
                 </div>
-            
+            </div>
 
             <div class="md:hidden mt-3">
-                <form asp-area="Customer" asp-controller="Home" asp-action="Index" method="get" class="relative">
+                <form asp-area="Customer" asp-controller="Home" asp-action="Shop" method="get" class="relative">
                     <input type="text" name="searchString" placeholder="Search..."
                            class="w-full bg-gray-100 border border-gray-200 rounded-lg py-2 px-4 pl-10 focus:outline-none focus:border-green-500" />
                     <button type="submit" class="absolute left-0 top-0 mt-2 ml-3 text-gray-500">
@@ -81,7 +81,7 @@
     <footer class="bg-gray-900 text-white py-12 mt-auto">
         <div class="container mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
             <div class="col-span-1 md:col-span-1">
-                <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="bi bi-basket-fill text-green-500"></i> NatureBasket</h3>
+                <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="bi bi-basket-fill text-green-500"></i> Nature Basket</h3>
                 <p class="text-gray-400 text-sm">Fresh organic products delivered directly from nature to your doorstep.</p>
             </div>
 
@@ -112,7 +112,7 @@
             </div>
         </div>
         <div class="text-center text-gray-600 text-xs mt-10 border-t border-gray-800 pt-6">
-            &copy; 2024 Nature Basket Boutique. All Rights Reserved.
+            &copy; @DateTime.Now.Year Nature Basket Boutique. All Rights Reserved.
         </div>
     </footer>
 
