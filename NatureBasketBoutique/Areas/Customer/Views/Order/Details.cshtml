@@ -1,0 +1,158 @@
+﻿@model NatureBasketBoutique.ViewModels.OrderVM
+@using NatureBasketBoutique.Utility
+
+@{
+    ViewData["Title"] = "Order Details";
+}
+
+<div class="container mx-auto px-4 py-10">
+
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-800 flex items-center gap-2">
+                Order #@Model.OrderHeader.Id
+                <span class="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">@Model.OrderHeader.OrderDate.ToShortDateString()</span>
+            </h2>
+            <p class="text-gray-500">View order status and details</p>
+        </div>
+        <div class="flex gap-3">
+            <a asp-action="Invoice" asp-route-orderId="@Model.OrderHeader.Id" target="_blank"
+               class="bg-white border border-gray-300 text-gray-700 font-bold py-2 px-4 rounded shadow-sm hover:bg-gray-50 transition flex items-center">
+                <i class="bi bi-file-earmark-pdf mr-2"></i> Invoice
+            </a>
+            <a asp-action="Index" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded transition">
+                Back to List
+            </a>
+        </div>
+    </div>
+
+    @if (Model.OrderHeader.OrderStatus != SD.StatusCancelled && Model.OrderHeader.OrderStatus != SD.StatusRefunded)
+    {
+        <div class="mb-10 mx-auto max-w-3xl">
+            <div class="flex items-center justify-between relative">
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-200 -z-10"></div>
+
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white bg-green-600">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                    <span class="text-xs font-bold mt-2 text-green-700">Order Placed</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white
+                            @(Model.OrderHeader.OrderStatus == SD.StatusInProcess || Model.OrderHeader.OrderStatus == SD.StatusShipped ? "bg-green-600" : "bg-gray-300")">
+                        @if (Model.OrderHeader.OrderStatus == SD.StatusInProcess || Model.OrderHeader.OrderStatus == SD.StatusShipped)
+                        {
+                            <i class="bi bi-check-lg"></i>
+                        }
+                        else
+                        {
+
+                            <span>2</span>
+                        }
+                    </div>
+                    <span class="text-xs font-bold mt-2 @(Model.OrderHeader.OrderStatus == SD.StatusInProcess || Model.OrderHeader.OrderStatus == SD.StatusShipped ? "text-green-700" : "text-gray-400")">Processing</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white
+                            @(Model.OrderHeader.OrderStatus == SD.StatusShipped ? "bg-green-600" : "bg-gray-300")">
+                        @if (Model.OrderHeader.OrderStatus == SD.StatusShipped)
+                        {
+                            <i class="bi bi-truck"></i>
+                        }
+                        else
+                        {
+
+                            <span>3</span>
+                        }
+                    </div>
+                    <span class="text-xs font-bold mt-2 @(Model.OrderHeader.OrderStatus == SD.StatusShipped ? "text-green-700" : "text-gray-400")">Shipped</span>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="mb-8 bg-red-50 border-l-4 border-red-500 p-4 rounded text-red-700 font-bold">
+            <i class="bi bi-x-circle-fill mr-2"></i> This order has been Cancelled.
+        </div>
+    }
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 font-bold text-gray-700">
+                    Items in your order
+                </div>
+                <ul class="divide-y divide-gray-100">
+                    @foreach (var item in Model.OrderDetail)
+                    {
+                        <li class="p-6 flex items-center gap-4">
+                            <div class="flex-1">
+                                <h4 class="font-bold text-gray-800">@item.Product.Title</h4>
+                                <p class="text-sm text-gray-500">Qty: @item.Count x Rs. @item.Price</p>
+                            </div>
+                            <div class="font-bold text-gray-800">
+                                Rs. @((item.Count * item.Price).ToString("0.00"))
+                            </div>
+                        </li>
+                    }
+                </ul>
+                <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-between items-center">
+                    <span class="font-bold text-gray-600">Total Amount</span>
+                    <span class="text-xl font-bold text-green-600">Rs. @Model.OrderHeader.OrderTotal.ToString("0.00")</span>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <form method="post" asp-action="Reorder">
+                    <input hidden name="orderId" value="@Model.OrderHeader.Id" />
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded shadow transition flex items-center">
+                        <i class="bi bi-cart-plus mr-2"></i> Buy Again
+                    </button>
+                </form>
+
+                @if (Model.OrderHeader.OrderStatus != SD.StatusShipped && Model.OrderHeader.OrderStatus != SD.StatusCancelled && Model.OrderHeader.OrderStatus != SD.StatusRefunded)
+                {
+                    <form method="post" asp-action="CancelOrder" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                        <input hidden name="orderId" value="@Model.OrderHeader.Id" />
+                        <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold py-3 px-6 rounded shadow-sm transition">
+                            Cancel Order
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow border border-gray-100 h-fit p-6">
+            <h3 class="font-bold text-gray-800 mb-4 border-b pb-2">Shipping Information</h3>
+
+            <div class="space-y-3 text-sm text-gray-600">
+                <div>
+                    <span class="block text-xs text-gray-400 uppercase">Contact</span>
+                    <span class="font-semibold text-gray-800">@Model.OrderHeader.Name</span><br />
+                    @Model.OrderHeader.PhoneNumber
+                </div>
+                <div>
+                    <span class="block text-xs text-gray-400 uppercase mt-3">Shipping Address</span>
+                    @Model.OrderHeader.StreetAddress<br />
+                    @Model.OrderHeader.City, @Model.OrderHeader.State<br />
+                    @Model.OrderHeader.PostalCode
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.OrderHeader.TrackingNumber))
+                {
+                    <div class="mt-4 pt-4 border-t border-dashed">
+                        <span class="block text-xs text-gray-400 uppercase">Tracking Info</span>
+                        <p class="text-green-600 font-mono font-bold">@Model.OrderHeader.Carrier</p>
+                        <p class="font-mono">#@Model.OrderHeader.TrackingNumber</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>

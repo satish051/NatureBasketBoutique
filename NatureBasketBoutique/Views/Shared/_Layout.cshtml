@@ -36,7 +36,10 @@
                     <div class="hidden md:flex space-x-6 items-center text-sm font-semibold uppercase tracking-wide">
                         <a class="text-gray-600 hover:text-green-600 transition" asp-area="Customer" asp-controller="Home" asp-action="Index">Home</a>
                         <a class="text-gray-600 hover:text-green-600 transition" asp-area="Customer" asp-controller="Home" asp-action="Shop">Products</a>
-
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <a class="text-gray-600 hover:text-green-600 transition" asp-area="Customer" asp-controller="Order" asp-action="Index">My Orders</a>
+                        }
                         @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
                         {
                             <div class="relative group z-50">

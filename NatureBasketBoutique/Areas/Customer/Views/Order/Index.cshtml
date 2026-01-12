@@ -1,0 +1,63 @@
+﻿@model IEnumerable<NatureBasketBoutique.Models.OrderHeader>
+
+@{
+    ViewData["Title"] = "Your Orders";
+}
+
+<div class="container mx-auto px-4 py-10">
+    <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+        <i class="bi bi-clock-history text-green-600 mr-3"></i> Order History
+    </h2>
+
+    @if (Model.Count() > 0)
+    {
+        <div class="bg-white shadow-md rounded-lg overflow-hidden border border-gray-100">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50 text-gray-600 uppercase text-xs font-semibold">
+                    <tr>
+                        <th class="p-4 border-b">Order ID</th>
+                        <th class="p-4 border-b">Date</th>
+                        <th class="p-4 border-b">Status</th>
+                        <th class="p-4 border-b">Total</th>
+                        <th class="p-4 border-b text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 text-sm">
+                    @foreach (var item in Model)
+                    {
+                        <tr class="hover:bg-gray-50 transition border-b last:border-0">
+                            <td class="p-4 font-medium">#@item.Id</td>
+                            <td class="p-4">@item.OrderDate.ToShortDateString()</td>
+                            <td class="p-4">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold
+                                            @(item.OrderStatus == "Approved" ? "bg-blue-100 text-blue-800" :
+                                                                            item.OrderStatus == "Shipped" ? "bg-green-100 text-green-800" :
+                                                                            item.OrderStatus == "Cancelled" ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-800")">
+                            @item.OrderStatus
+                        </span>
+                    </td>
+                    <td class="p-4 font-bold text-green-600">Rs. @item.OrderTotal.ToString("0.00")</td>
+                    <td class="p-4 text-center">
+                        <a asp-action="Details" asp-route-orderId="@item.Id"
+                           class="text-green-600 hover:text-green-800 font-bold hover:underline transition">
+                            View Details
+                        </a>
+                    </td>
+                </tr>
+                                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-20 bg-gray-50 rounded-lg">
+            <i class="bi bi-basket3 text-6xl text-gray-300 mb-4 block"></i>
+            <h3 class="text-xl font-bold text-gray-600">No orders found</h3>
+            <p class="text-gray-500 mb-6">Looks like you haven't bought anything yet.</p>
+            <a asp-controller="Home" asp-action="Index" class="bg-green-600 text-white px-6 py-2 rounded-full font-bold hover:bg-green-700 transition">
+                Start Shopping
+            </a>
+        </div>
+    }
+</div>

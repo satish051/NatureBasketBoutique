@@ -1,8 +1,7 @@
-﻿@using NatureBasketBoutique.Models
-@model IEnumerable<OrderHeader>
+﻿@model IEnumerable<NatureBasketBoutique.Models.OrderHeader>
 
 @{
-    ViewData["Title"] = "Order Management";
+    ViewData["Title"] = "Order List";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -11,73 +10,67 @@
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-3xl font-bold text-gray-800">
-            <i class="bi bi-clipboard-data"></i> Manage Orders
+            <i class="bi bi-truck"></i> Order Management
         </h2>
     </div>
 
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
-        <div class="p-4">
-            <table id="tblData" class="w-full text-sm text-left text-gray-500 hover:table-fixed">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
-                    <tr>
-                        <th class="px-6 py-3">Order ID</th>
-                        <th class="px-6 py-3">Name</th>
-                        <th class="px-6 py-3">Phone</th>
-                        <th class="px-6 py-3">Email</th>
-                        <th class="px-6 py-3">Status</th>
-                        <th class="px-6 py-3">Total</th>
-                        <th class="px-6 py-3 text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var obj in Model)
-                    {
-                        <tr class="bg-white border-b hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 font-bold text-gray-900">@obj.DisplayId</td>
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200 p-4">
+        <table id="tblData" class="w-full text-sm text-left text-gray-500 hover:table-fixed display">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                <tr>
+                    <th class="px-4 py-3">Order ID</th>
+                    <th class="px-4 py-3">Name</th>
+                    <th class="px-4 py-3">Phone</th>
+                    <th class="px-4 py-3">Email</th>
+                    <th class="px-4 py-3">Status</th>
+                    <th class="px-4 py-3">Total</th>
+                    <th class="px-4 py-3 text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var obj in Model)
+                {
+                    <tr class="bg-white border-b hover:bg-gray-50 transition">
+                        <td class="px-4 py-3 font-medium text-gray-900">
+                            #@obj.Id
+                        </td>
+                        <td class="px-4 py-3">
+                            @obj.Name
+                        </td>
+                        <td class="px-4 py-3">
+                            @obj.PhoneNumber
+                        </td>
+                        <td class="px-4 py-3">
+                            @obj.ApplicationUser.Email
+                        </td>
+                        <td class="px-4 py-3">
+                            @{
+                                var statusColor = "bg-gray-100 text-gray-800";
+                                if (obj.OrderStatus == "Approved") { statusColor = "bg-blue-100 text-blue-800"; }
+                                if (obj.OrderStatus == "InProcess") { statusColor = "bg-purple-100 text-purple-800"; }
+                                if (obj.OrderStatus == "Shipped") { statusColor = "bg-green-100 text-green-800"; }
+                                if (obj.OrderStatus == "Cancelled") { statusColor = "bg-red-100 text-red-800"; }
+                                if (obj.OrderStatus == "Refunded") { statusColor = "bg-yellow-100 text-yellow-800"; }
+                            }
+                            <span class="@statusColor px-2 py-1 rounded-full text-xs font-bold border">
+                                @obj.OrderStatus
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 font-bold text-green-600">
+                            Rs. @obj.OrderTotal.ToString("0.00")
+                        </td>
 
-                            <td class="px-6 py-4">@obj.Name</td>
-                            <td class="px-6 py-4">@obj.PhoneNumber</td>
-                            <td class="px-6 py-4">@obj.ApplicationUser?.Email</td>
-                            <td class="px-6 py-4">
-                                @if (obj.OrderStatus == "Pending")
-                                {
-                                    <span class="bg-yellow-100 text-yellow-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded border border-yellow-200">Pending</span>
-                                }
-                                else if (obj.OrderStatus == "Approved")
-                                {
-                                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded border border-blue-200">Approved</span>
-                                }
-                                else if (obj.OrderStatus == "In Process")
-                                {
-                                    <span class="bg-purple-100 text-purple-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded border border-purple-200">Processing</span>
-                                }
-                                else if (obj.OrderStatus == "Shipped")
-                                {
-                                    <span class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded border border-green-200">Shipped</span>
-                                }
-                                else if (obj.OrderStatus == "Cancelled" || obj.OrderStatus == "Refunded")
-                                {
-                                    <span class="bg-red-100 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded border border-red-200">Cancelled</span>
-                                }
-                                else
-                                {
-                                    <span class="bg-gray-100 text-gray-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded border border-gray-200">@obj.OrderStatus</span>
-                                }
-                            </td>
-                            <td class="px-6 py-4 font-bold text-gray-800">
-                                NPR @obj.OrderTotal.ToString("0.00")
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <a asp-action="Details" asp-route-orderId="@obj.Id"
-                                   class="text-green-600 hover:text-green-900 transition text-lg" title="View Details">
-                                    <i class="bi bi-eye-fill"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                        <td class="px-4 py-3 text-center">
+                            <a asp-controller="Order" asp-action="Details" asp-route-orderId="@obj.Id"
+                               class="bg-green-600 hover:bg-green-700 text-white w-8 h-8 rounded inline-flex items-center justify-center shadow transition transform hover:scale-110"
+                               title="Edit / Details">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -86,7 +79,7 @@
     <script>
         $(document).ready(function () {
             $('#tblData').DataTable({
-                "order": [[0, "desc"]]
+                "order": [[0, "desc"]] // Sort by Order ID descending (newest first)
             });
         });
     </script>
