@@ -2,8 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using NatureBasketBoutique.Models;
 
-// ... existing imports
-
 namespace NatureBasketBoutique.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>

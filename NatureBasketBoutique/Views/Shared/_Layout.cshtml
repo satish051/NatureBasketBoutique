@@ -25,7 +25,7 @@
                     <form asp-area="Customer" asp-controller="Home" asp-action="Shop" method="get" class="relative group">
                         <input type="text" name="searchString" placeholder="Search for fresh products..."
                                class="w-full bg-gray-100 text-gray-700 border border-gray-200 rounded-full py-2 px-4 pl-12
-                                    focus:outline-none focus:bg-white focus:border-green-500 transition shadow-sm" />
+                                focus:outline-none focus:bg-white focus:border-green-500 transition shadow-sm" />
                         <button type="submit" class="absolute left-0 top-0 mt-2 ml-3 text-gray-500 group-focus-within:text-green-600">
                             <i class="bi bi-search"></i>
                         </button>
@@ -36,10 +36,12 @@
                     <div class="hidden md:flex space-x-6 items-center text-sm font-semibold uppercase tracking-wide">
                         <a class="text-gray-600 hover:text-green-600 transition" asp-area="Customer" asp-controller="Home" asp-action="Index">Home</a>
                         <a class="text-gray-600 hover:text-green-600 transition" asp-area="Customer" asp-controller="Home" asp-action="Shop">Products</a>
+
                         @if (User.Identity.IsAuthenticated)
                         {
                             <a class="text-gray-600 hover:text-green-600 transition" asp-area="Customer" asp-controller="Order" asp-action="Index">My Orders</a>
                         }
+
                         @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
                         {
                             <div class="relative group z-50">
@@ -54,13 +56,13 @@
                                 </div>
                             </div>
                         }
+
+                        <partial name="_LoginPartial" />
                     </div>
 
                     <a class="relative text-gray-500 hover:text-green-600 transition" asp-area="Customer" asp-controller="Cart" asp-action="Index">
                         <i class="bi bi-cart3 text-2xl"></i>
                     </a>
-
-                    <partial name="_LoginPartial" />
                 </div>
             </div>
 
@@ -117,6 +119,8 @@
         <div class="text-center text-gray-600 text-xs mt-10 border-t border-gray-800 pt-6">
             &copy; @DateTime.Now.Year Nature Basket Boutique. All Rights Reserved.
         </div>
+        <partial name="_LoginPartial" />
+
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

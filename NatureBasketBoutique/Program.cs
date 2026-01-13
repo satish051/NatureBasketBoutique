@@ -14,27 +14,30 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// 2. Add Identity (Users & Roles)
+// 2. Add Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
-    options.Password.RequireDigit = false;
-    options.Password.RequireLowercase = false;
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
-    options.Password.RequiredLength = 6;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders();
+.AddDefaultTokenProviders(); // Added this (good practice for emails/resets)
 
+// IMPORTANT: Since you are using a CUSTOM Controller for Account, 
+// you might want to change these paths to "/Customer/Account/Login" later.
+// For now, I will leave them pointing to Identity defaults.
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = $"/Identity/Account/Login";
-    options.LogoutPath = $"/Identity/Account/Logout";
-    options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
+    // Update these paths to point to your new Custom Controller
+    options.LoginPath = $"/Customer/Account/Login";
+    options.LogoutPath = $"/Customer/Account/Logout";
+    options.AccessDeniedPath = $"/Customer/Account/AccessDenied";
 });
 
-// 3. Register Services (Order Matters!)
+// 3. Register Services
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 
@@ -48,12 +51,9 @@ builder.Services.AddSession(options => {
     options.Cookie.IsEssential = true;
 });
 
-// 4. Build the App (Locks the container)
 var app = builder.Build();
 
-// --- NO SERVICE REGISTRATION BELOW THIS LINE ---
-
-// 5. Configure the HTTP request pipeline.
+// 4. Configure Pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -64,25 +64,25 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-// 6. Enable Authentication & Authorization
+// 5. Auth & Session
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
 
-// --- CRITICAL FIX START ---
-// This enables the /Admin/ URL routing
+// 6. Routing Maps
+app.MapRazorPages(); // Required for Identity partials if you use them
+
+// This handles your Areas (Admin, Customer)
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
-// --- CRITICAL FIX END ---
 
+// This handles default fallbacks
 app.MapControllerRoute(
     name: "default",
     pattern: "{area=Customer}/{controller=Home}/{action=Index}/{id?}");
 
-app.MapRazorPages();
-
-// 7. Seed Database Roles
+// 7. Seed Database (MOVED BEFORE app.Run)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -92,8 +92,9 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        // Log errors or ignore if seed class doesn't exist yet
+        // Helpful to print error to console if seeding fails
+        Console.WriteLine("Error seeding DB: " + ex.Message);
     }
 }
 
-app.Run();
+app.Run(); // <--- ONLY ONE app.Run() AT THE VERY END

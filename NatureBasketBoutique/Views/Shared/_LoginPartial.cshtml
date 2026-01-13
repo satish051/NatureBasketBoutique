@@ -1,29 +1,28 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using NatureBasketBoutique.Models
+
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
-<ul class="flex items-center space-x-4">
-    @if (SignInManager.IsSignedIn(User))
-    {
-        <li>
-            <a id="manage" class="text-green-100 hover:text-white font-medium text-sm transition" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
-                Hello @UserManager.GetUserName(User)!
-            </a>
-        </li>
-        <li>
-            <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                <button id="logout" type="submit" class="bg-green-800 hover:bg-green-900 text-white px-3 py-1 rounded text-sm transition">Logout</button>
-            </form>
-        </li>
-    }
-    else
-    {
-        <li>
-            <a class="text-green-100 hover:text-white font-medium text-sm transition" id="register" asp-area="Identity" asp-page="/Account/Register">Register</a>
-        </li>
-        <li>
-            <a class="bg-white text-green-700 hover:bg-gray-100 px-3 py-1 rounded text-sm font-bold transition" id="login" asp-area="Identity" asp-page="/Account/Login">Login</a>
-        </li>
-    }
-</ul>
+@if (SignInManager.IsSignedIn(User))
+{
+    // Fetch the full user object to get the custom "Name" property
+    var appUser = await UserManager.GetUserAsync(User);
+
+    <div class="flex items-center gap-4">
+        <a asp-area="Customer" asp-controller="Account" asp-action="Profile" class="text-gray-600 text-sm hover:text-green-600 font-semibold transition">
+            Hello, @(appUser?.Name ?? User.Identity?.Name)!
+        </a>
+
+        <form id="logoutForm" class="inline" asp-area="Customer" asp-controller="Account" asp-action="Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+            <button id="logout" type="submit" class="text-gray-600 hover:text-red-500 transition font-semibold text-sm">Logout</button>
+        </form>
+    </div>
+}
+else
+{
+    <div class="flex items-center gap-4 border-l pl-4 border-gray-300">
+        <a class="text-gray-600 hover:text-green-600 transition font-semibold" asp-area="Customer" asp-controller="Account" asp-action="Login">Login</a>
+        <a class="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition text-sm font-bold" asp-area="Customer" asp-controller="Account" asp-action="Register">Register</a>
+    </div>
+}
