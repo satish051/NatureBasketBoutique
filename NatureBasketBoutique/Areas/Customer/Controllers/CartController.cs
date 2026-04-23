@@ -54,6 +54,7 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
                 ShoppingCartVM.OrderHeader.OrderTotal += (cart.Price * cart.Count);
             }
 
+
             return View(ShoppingCartVM);
         }
 
@@ -135,45 +136,81 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
 
         // GET: Summary (Checkout Page)
         [Authorize]
+        [HttpGet]
         public IActionResult Summary()
         {
             var claimsIdentity = (ClaimsIdentity)User.Identity;
             var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
-            ShoppingCartVM = new ShoppingCartVM()
+            // 1. Get the current user to auto-fill shipping details
+            var applicationUser = _unitOfWork.ApplicationUser.Get(u => u.Id == userId);
+
+            // 2. CREATE THE VARIABLE (Notice the lowercase 's' at the start!)
+            ShoppingCartVM shoppingCartVM = new()
             {
-                ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == userId,
-                includeProperties: "Product"),
+                ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == userId, includeProperties: "Product"),
                 OrderHeader = new OrderHeader()
             };
 
-            // --- SECURITY CHECK: PREVENT EMPTY CART CHECKOUT ---
-            if (ShoppingCartVM.ShoppingCartList.Count() == 0)
-            {
-                // Optional: Add a notification message here if you have Toastr set up
-                // TempData["error"] = "Your cart is empty!";
-                return RedirectToAction(nameof(Index));
-            }
-            // ---------------------------------------------------
+            // 3. Map the User's Profile data into the OrderHeader
+            shoppingCartVM.OrderHeader.ApplicationUser = applicationUser;
+            shoppingCartVM.OrderHeader.Name = applicationUser.Name;
+            shoppingCartVM.OrderHeader.PhoneNumber = applicationUser.PhoneNumber;
+            shoppingCartVM.OrderHeader.StreetAddress = applicationUser.StreetAddress;
+            shoppingCartVM.OrderHeader.City = applicationUser.City;
+            shoppingCartVM.OrderHeader.State = applicationUser.State;
+            shoppingCartVM.OrderHeader.PostalCode = applicationUser.PostalCode;
 
-            var applicationUser = _unitOfWork.ApplicationUser.Get(u => u.Id == userId);
-
-            ShoppingCartVM.OrderHeader.ApplicationUser = applicationUser;
-            ShoppingCartVM.OrderHeader.Name = applicationUser.Name;
-            ShoppingCartVM.OrderHeader.PhoneNumber = applicationUser.PhoneNumber;
-            ShoppingCartVM.OrderHeader.StreetAddress = applicationUser.StreetAddress;
-            ShoppingCartVM.OrderHeader.City = applicationUser.City;
-            ShoppingCartVM.OrderHeader.State = applicationUser.State;
-            ShoppingCartVM.OrderHeader.PostalCode = applicationUser.PostalCode;
-
-            foreach (var cart in ShoppingCartVM.ShoppingCartList)
+            // 4. Calculate the Order Total using the lowercase variable
+            foreach (var cart in shoppingCartVM.ShoppingCartList)
             {
                 cart.Price = cart.Product.Price;
-                ShoppingCartVM.OrderHeader.OrderTotal += (cart.Price * cart.Count);
+                shoppingCartVM.OrderHeader.OrderTotal += (cart.Price * cart.Count);
             }
 
-            return View(ShoppingCartVM);
+            // 5. Send the lowercase variable to the HTML View
+            return View(shoppingCartVM);
         }
+
+        //public IActionResult Summary()
+        //{
+        //    var claimsIdentity = (ClaimsIdentity)User.Identity;
+        //    var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+        //    ShoppingCartVM = new ShoppingCartVM()
+        //    {
+        //        ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == userId,
+        //        includeProperties: "Product"),
+        //        OrderHeader = new OrderHeader()
+        //    };
+
+        //    // --- SECURITY CHECK: PREVENT EMPTY CART CHECKOUT ---
+        //    if (ShoppingCartVM.ShoppingCartList.Count() == 0)
+        //    {
+        //        // Optional: Add a notification message here if you have Toastr set up
+        //        // TempData["error"] = "Your cart is empty!";
+        //        return RedirectToAction(nameof(Index));
+        //    }
+        //    // ---------------------------------------------------
+
+        //    var applicationUser = _unitOfWork.ApplicationUser.Get(u => u.Id == userId);
+
+        //    ShoppingCartVM.OrderHeader.ApplicationUser = applicationUser;
+        //    ShoppingCartVM.OrderHeader.Name = applicationUser.Name;
+        //    ShoppingCartVM.OrderHeader.PhoneNumber = applicationUser.PhoneNumber;
+        //    ShoppingCartVM.OrderHeader.StreetAddress = applicationUser.StreetAddress;
+        //    ShoppingCartVM.OrderHeader.City = applicationUser.City;
+        //    ShoppingCartVM.OrderHeader.State = applicationUser.State;
+        //    ShoppingCartVM.OrderHeader.PostalCode = applicationUser.PostalCode;
+
+        //    foreach (var cart in ShoppingCartVM.ShoppingCartList)
+        //    {
+        //        cart.Price = cart.Product.Price;
+        //        ShoppingCartVM.OrderHeader.OrderTotal += (cart.Price * cart.Count);
+        //    }
+
+        //    return View(ShoppingCartVM);
+        //}
 
         // --- NEW: PLACE ORDER LOGIC ---
         [HttpPost]

@@ -41,12 +41,17 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
         }
 
         // --- SHOP PAGE (Multi-Category Filter) ---
-        public IActionResult Shop(string? searchString, string? sortOrder, int[]? categoryIds)
+        // Change decimal? to double? right here in the parameters:
+        public IActionResult Shop(string? searchString, string? sortOrder, int[]? categoryIds, double? minPrice, double? maxPrice)
         {
             // 1. Pass Data to View
             ViewData["CurrentSort"] = sortOrder;
             ViewData["CurrentSearch"] = searchString;
-            ViewData["SelectedCategories"] = categoryIds; // Store array to check boxes in View
+            ViewData["SelectedCategories"] = categoryIds;
+
+            // Store the price filters so the sidebar inputs don't clear out
+            ViewData["MinPrice"] = minPrice;
+            ViewData["MaxPrice"] = maxPrice;
 
             // Load Categories
             ViewBag.Categories = _unitOfWork.Category.GetAll().OrderBy(u => u.DisplayOrder).ToList();
@@ -57,19 +62,26 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
             productList = _unitOfWork.Product.GetAll(includeProperties: "Category");
 
             // 3. APPLY FILTERS
-
-            // Filter by Multiple Categories
             if (categoryIds != null && categoryIds.Length > 0)
             {
-                // Keep products where the CategoryId is in the selected list
                 productList = productList.Where(u => categoryIds.Contains(u.CategoryId));
             }
 
-            // Filter by Search
             if (!string.IsNullOrEmpty(searchString))
             {
                 productList = productList.Where(u => u.Title.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
                                                      u.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase));
+            }
+
+            // Since minPrice and maxPrice are now 'double', the >= and <= operators will work perfectly!
+            if (minPrice.HasValue && minPrice.Value >= 0)
+            {
+                productList = productList.Where(u => u.Price >= minPrice.Value);
+            }
+
+            if (maxPrice.HasValue && maxPrice.Value > 0)
+            {
+                productList = productList.Where(u => u.Price <= maxPrice.Value);
             }
 
             // 4. APPLY SORTING
@@ -93,14 +105,23 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
         }
 
         // --- 2. GET: Display Product Details ---
+        [HttpGet]
         public IActionResult Details(int productId)
         {
+            // 1. Fetch the main product the user clicked on
             ShoppingCart cart = new()
             {
-                Product = _unitOfWork.Product.Get(u => u.Id == productId, includeProperties: "Category"),
                 Count = 1,
-                ProductId = productId
+                ProductId = productId,
+                Product = _unitOfWork.Product.Get(u => u.Id == productId, includeProperties: "Category")
             };
+
+            // 2. Fetch "Related Products" (Same Category, but exclude the one they are currently looking at)
+            // We use .Take(6) so we don't load 100 products and slow down the page!
+            ViewBag.RelatedProducts = _unitOfWork.Product.GetAll(
+                u => u.CategoryId == cart.Product.CategoryId && u.Id != productId
+            ).Take(6).ToList();
+
             return View(cart);
         }
 
@@ -158,6 +179,12 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
         }
 
         public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult Terms()
         {
             return View();
         }

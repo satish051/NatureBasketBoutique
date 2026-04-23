@@ -8,10 +8,23 @@
 <link rel="stylesheet" href="//cdn.datatables.net/1.13.3/css/jquery.dataTables.min.css" />
 
 <div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h2 class="text-3xl font-bold text-gray-800">
             <i class="bi bi-truck"></i> Order Management
         </h2>
+
+        <div class="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+            <label for="statusFilter" class="font-bold text-gray-700 text-sm whitespace-nowrap">Filter by Status:</label>
+            <select id="statusFilter" class="border border-gray-300 rounded-md px-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50 text-gray-800 font-semibold cursor-pointer">
+                <option value="">All Orders</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="InProcess">In Process</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="Refunded">Refunded</option>
+            </select>
+        </div>
     </div>
 
     <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200 p-4">
@@ -78,8 +91,17 @@
     <script src="//cdn.datatables.net/1.13.3/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function () {
-            $('#tblData').DataTable({
+            // 1. Initialize the table and assign it to a variable
+            var table = $('#tblData').DataTable({
                 "order": [[0, "desc"]] // Sort by Order ID descending (newest first)
+            });
+
+            // 2. NEW: Listen for changes on the dropdown menu
+            $('#statusFilter').on('change', function () {
+                var selectedStatus = $(this).val();
+
+                // 3. Search Column 4 (Status) for the selected word, then redraw the table
+                table.column(4).search(selectedStatus).draw();
             });
         });
     </script>

@@ -23,7 +23,7 @@
 
                 <div class="flex-grow max-w-md hidden md:block mx-4">
                     <form asp-area="Customer" asp-controller="Home" asp-action="Shop" method="get" class="relative group">
-                        <input type="text" name="searchString" placeholder="Search for fresh products..."
+                        <input type="text" name="searchString" placeholder="  Search for fresh products..."
                                class="w-full bg-gray-100 text-gray-700 border border-gray-200 rounded-full py-2 px-4 pl-12
                                 focus:outline-none focus:bg-white focus:border-green-500 transition shadow-sm" />
                         <button type="submit" class="absolute left-0 top-0 mt-2 ml-3 text-gray-500 group-focus-within:text-green-600">
@@ -101,11 +101,14 @@
 
             <div>
                 <h4 class="font-bold mb-4 text-green-400">Support</h4>
+
                 <ul class="space-y-2 text-sm text-gray-400">
-                    <li><a href="#" class="hover:text-white transition">Order Tracking</a></li>
+                    <li><a asp-area="Customer" asp-controller="Order" asp-action="Index" class="hover:text-white transition">Order Tracking</a></li>
                     <li><a asp-area="Customer" asp-controller="Home" asp-action="Privacy" class="hover:text-white transition">Privacy Policy</a></li>
-                    <li><a href="#" class="hover:text-white transition">Terms & Conditions</a></li>
+
+                    <li><a asp-area="Customer" asp-controller="Home" asp-action="Terms" class="hover:text-white transition">Terms & Conditions</a></li>
                 </ul>
+
             </div>
 
             <div>

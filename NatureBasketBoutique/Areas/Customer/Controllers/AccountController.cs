@@ -131,73 +131,133 @@ namespace NatureBasketBoutique.Areas.Customer.Controllers
             return View(model);
         }
 
+        // 6. GET: Show Profile Page
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
             // Get the current logged-in user
             var user = await _userManager.GetUserAsync(User);
+
             if (user == null)
             {
                 return NotFound();
             }
 
-            // Reuse the RegisterViewModel to display the data (or create a separate ProfileVM)
-            var model = new RegisterViewModel
-            {
-                Name = user.Name,
-                Email = user.Email
-                // We don't send the password back for security reasons
-            };
-
-            return View(model);
+            // Pass the full ApplicationUser directly to the View 
+            // so we can access Address, City, Phone, etc.
+            return View(user);
         }
 
-
+        // 7. POST: Save Profile Page
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Profile(RegisterViewModel model)
+        public async Task<IActionResult> Profile(ApplicationUser model)
         {
-            // We fetch the current user from the Database to make sure we are editing the right person
+            // Fetch the current user from the Database to make sure we are editing the right person
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 return NotFound();
             }
 
-            // Since we are reusing RegisterViewModel, we need to ignore Password validation
-            // because the user isn't resetting their password here.
-            ModelState.Remove("Password");
-            ModelState.Remove("ConfirmPassword");
+            // 1. Update all the shipping and contact fields
+            user.Name = model.Name;
+            user.PhoneNumber = model.PhoneNumber;
+            user.StreetAddress = model.StreetAddress;
+            user.City = model.City;
+            user.State = model.State;
+            user.PostalCode = model.PostalCode;
 
-            if (ModelState.IsValid)
+            // 2. Save to Database using UserManager
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
             {
-                // 1. Update the fields
-                user.Name = model.Name;
-                user.Email = model.Email;
-                user.UserName = model.Email; // Sync Username with Email
+                // CRITICAL STEP: Refresh the sign-in cookie
+                await _signInManager.RefreshSignInAsync(user);
 
-                // 2. Save to Database
-                var result = await _userManager.UpdateAsync(user);
+                TempData["success"] = "Profile updated successfully!";
 
-                if (result.Succeeded)
-                {
-                    // CRITICAL STEP: Refresh the sign-in cookie
-                    // If we don't do this, changing the SecurityStamp (which happens on update) 
-                    // will force the user to log out immediately.
-                    await _signInManager.RefreshSignInAsync(user);
+                // Redirect back to the profile page so they can see their saved changes
+                return RedirectToAction(nameof(Profile));
+            }
 
-                    TempData["success"] = "Profile updated successfully!";
-                    return RedirectToAction("Index", "Home");
-                }
-
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
+            // 3. Handle any database errors
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
             }
 
             return View(model);
         }
+
+
+        //[HttpGet]
+        //public async Task<IActionResult> Profile()
+        //{
+        //    // Get the current logged-in user
+        //    var user = await _userManager.GetUserAsync(User);
+        //    if (user == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    // Reuse the RegisterViewModel to display the data (or create a separate ProfileVM)
+        //    var model = new RegisterViewModel
+        //    {
+        //        Name = user.Name,
+        //        Email = user.Email
+        //        // We don't send the password back for security reasons
+        //    };
+
+        //    return View(model);
+        //}
+
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Profile(RegisterViewModel model)
+        //{
+        //    // We fetch the current user from the Database to make sure we are editing the right person
+        //    var user = await _userManager.GetUserAsync(User);
+        //    if (user == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    // Since we are reusing RegisterViewModel, we need to ignore Password validation
+        //    // because the user isn't resetting their password here.
+        //    ModelState.Remove("Password");
+        //    ModelState.Remove("ConfirmPassword");
+
+        //    if (ModelState.IsValid)
+        //    {
+        //        // 1. Update the fields
+        //        user.Name = model.Name;
+        //        user.Email = model.Email;
+        //        user.UserName = model.Email; // Sync Username with Email
+
+        //        // 2. Save to Database
+        //        var result = await _userManager.UpdateAsync(user);
+
+        //        if (result.Succeeded)
+        //        {
+        //            // CRITICAL STEP: Refresh the sign-in cookie
+        //            // If we don't do this, changing the SecurityStamp (which happens on update) 
+        //            // will force the user to log out immediately.
+        //            await _signInManager.RefreshSignInAsync(user);
+
+        //            TempData["success"] = "Profile updated successfully!";
+        //            return RedirectToAction("Index", "Home");
+        //        }
+
+        //        foreach (var error in result.Errors)
+        //        {
+        //            ModelState.AddModelError(string.Empty, error.Description);
+        //        }
+        //    }
+
+        //    return View(model);
+        //}
 
     }
 }
